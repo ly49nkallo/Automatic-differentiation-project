@@ -1,3 +1,5 @@
 # AdvancedTopics2021
+---
+## Custom framework for building Neural Nets
 
-This is Ty Brennan's Repository!
+Ty Brennan
