@@ -2,4 +2,5 @@ from utils import Dataloader
 
 loader = Dataloader('MNIST', 32, train=True)
 
-print(iter(loader).__next__().shape)
+for i, (imgs, labels) in enumerate(loader):
+    print(i, imgs.shape, labels.shape)
