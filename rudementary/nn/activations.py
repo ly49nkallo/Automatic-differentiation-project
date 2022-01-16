@@ -1,5 +1,5 @@
 import math
-import numpy as np
+import autograd.numpy as np
 
 def Hardlim(x, threshold = 0, Symmetrical=False):
     if Symmetrical:
@@ -28,11 +28,10 @@ def satlin(x, Symmetrical=False):
             return x
 
 def logsig(x):
-    return 1/(1 + np.exp(-x))
+    return 1./(1. + np.exp(-x))
 
 def tansig(x):
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
 
 def poslin(x):
     return max(x, 0)
-

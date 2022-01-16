@@ -1,6 +1,10 @@
 from utils import Dataloader
 
-loader = Dataloader('MNIST', 32, train=True)
+if __name__ == '__main__':
+    loader = Dataloader('MNIST', 32, train=True)
 
-for i, (imgs, labels) in enumerate(loader):
-    print(i, imgs.shape, labels.shape)
+    for i, (imgs, labels) in enumerate(loader):
+        print(i, imgs.shape, labels.shape)
+    
+        
+

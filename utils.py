@@ -26,7 +26,7 @@ class Dataloader:
             self.index += self.batch_size
             # we want to return a tuple of two npArrays of shape 32x28x28 and 32x1
             if self.dataset == 'MNIST':
-                return np.array([b.getdata() for b in batch['image']]).reshape(-1, 28, 28), np.array(batch['label'])
+                return np.array([b.getdata() / 255 for b in batch['image']]).reshape(-1, 28, 28), np.array(batch['label'])
             else:
                 raise NameError(f'There is no database called {self.dataset}')
         else:
