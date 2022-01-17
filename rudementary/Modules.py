@@ -1,14 +1,14 @@
 import numpy as rnp
 import autograd.numpy as np
 ### https://github.com/HIPS/autograd/blob/master/docs/tutorial.md
-from autograd import grad, elementwise_grad
+from autograd import grad, elementwise_grad, tensor_jacobian_product
 from nn.activations import *
 
 # base implementation
 class Layer:
     def __init__(self):
-        self.input:rnp.ndarray = None
-        self.output:rnp.ndarray = None
+        self.input:np.ndarray = None
+        self.output:np.ndarray = None
 
     def forward(self, x:np.ndarray) -> np.ndarray: raise NotImplementedError
     
@@ -24,15 +24,15 @@ class Linear(Layer):
         except AssertionError:
             raise NameError("feature count must be an integer, not a ", type(in_features), type(out_features))
         if bias:
-            self.bias:rnp.ndarray = np.zeros(out_features)
-        self.weights:rnp.ndarray = np.random.uniform(-1, 1, size=(in_features, out_features))
+            self.bias:np.ndarray = np.zeros(shape =(1, out_features))
+        self.weights:np.ndarray = np.random.uniform(-1, 1, size=(in_features, out_features))
 
     def forward(self, x):
         # x.shape = (self.in_features,) = x_i
         # y_j = b_j + sum/i(x_i*w_ij)
         self.input = x
         if self.bias is not None:
-            self.output = np.add(np.dot(self.weights.T, x), self.bias)
+            self.output = np.add(np.dot(self.input, self.weights), self.bias)
         else:
             self.output = np.dot(self.weights.T, x)
         return self.output
@@ -53,7 +53,7 @@ class Sigmoid(Layer):
         # cache maybe
         self.function = logsig
         # o' = o(x)(1-o(x))
-        self.df_dx = elementwise_grad(logsig)
+        self.df_dx = tensor_jacobian_product(logsig)
     
     def forward(self, x):
         self.input = x
@@ -64,12 +64,12 @@ class Sigmoid(Layer):
     # learning_rate is not used because there is no "learnable" parameters.
     def backward(self, error, lr):
         # sigmoid_prime: o' = 
-        return self.df_dx(self.input) * error
+        return tansig_prime(self.input) * error
 
 class HyperbolicTangent(Layer):
     def __init__(self):
         self.function = tansig
-        self.df_dx = elementwise_grad(tansig)
+        self.df_dx = tensor_jacobian_product(tansig)
 
     def forward(self, x):
         self.input = x
@@ -79,5 +79,16 @@ class HyperbolicTangent(Layer):
     # Returns input_error=dE/dX for a given output_error=dE/dY.
     # learning_rate is not used because there is no "learnable" parameters.
     def backward(self, error, lr): 
-        return self.df_dx(self.input) * error
+        return tansig_prime(self.input) * error
 
+class ReLU(Layer):
+    def __init__(self):
+        pass
+
+    def forward(self, x):
+        self.input = x
+        self.output = poslin(x)
+        return self.output
+
+    def backward(self, error, lr):
+        return poslin_prime(self.input) * error

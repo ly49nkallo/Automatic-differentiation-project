@@ -10,7 +10,8 @@ class Net:
         # list of layer classes
         self.layers = layers
         self.loss = ef.mse
-        self.loss_prime = elementwise_grad(self.loss)
+        #self.loss_prime = elementwise_grad(self.loss)
+        self.loss_prime = ef.mse_prime
 
     def add(self, layer):
         self.layers.append(layer)

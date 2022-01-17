@@ -30,8 +30,17 @@ def satlin(x, Symmetrical=False):
 def logsig(x):
     return 1./(1. + np.exp(-x))
 
+def logsig_prime(x):
+    logsig(x) * (1-logsig(x))
+
 def tansig(x):
     return (np.exp(x) - np.exp(-x)) / (np.exp(x) + np.exp(-x))
 
+def tansig_prime(x):
+    return 1-np.tanh(x)**2
+
 def poslin(x):
-    return max(x, 0)
+    return np.maximum(x, 0)
+
+def poslin_prime(x):
+    return np.vectorize(lambda x: int(x > 0))(x)
