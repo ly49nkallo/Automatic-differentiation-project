@@ -37,9 +37,11 @@ print(x_train.shape, y_train.shape, x_test.shape, y_train.shape)
 
 net = Net()
 net.add(Linear(28*28,128))
-net.add(ReLU())
-net.add(Linear(128,10))
 net.add(HyperbolicTangent())
+net.add(Linear(128,64))
+net.add(HyperbolicTangent())
+net.add(Linear(64,10))
+net.add(Sigmoid())
 
 net.train(x_train[0:1000], y_train[0:1000], epochs=12, lr=0.1)
 
