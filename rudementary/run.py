@@ -37,19 +37,21 @@ print(x_train.shape, y_train.shape, x_test.shape, y_train.shape)
 
 net = Net()
 net.add(Linear(28*28,128))
-net.add(HyperbolicTangent())
-net.add(Linear(128,64))
-net.add(HyperbolicTangent())
-net.add(Linear(64,10))
+net.add(Sigmoid())
+net.add(Linear(128,128))
+net.add(Sigmoid())
+net.add(Linear(128,10))
 net.add(Sigmoid())
 
-net.train(x_train[0:1000], y_train[0:1000], epochs=12, lr=0.1)
+net.train(x_train[0:4000], y_train[0:4000], epochs=9, lr=0.1)
+net.train(x_train[4000:8000], y_train[4000:8000], epochs=7, lr=0.001)
 
-out = net.predict(x_train)
+TEST_SIZE = 8000
+out = net.predict(x_test[:TEST_SIZE])
+correct = 0
+for i in range(TEST_SIZE):
+    response = np.argmax(out[i])
+    if response == np.argmax(y_test[i]):
+        correct = correct + 1
 
-out = net.predict(x_test[0:3])
-print("\n")
-print("predicted values : ")
-print(out, end="\n")
-print("true values : ")
-print(y_test[0:3])
+print(f'Accuracy is {correct/TEST_SIZE*100}%')
