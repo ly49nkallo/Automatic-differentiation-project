@@ -2,6 +2,7 @@ import autograd.numpy as np
 from Modules import Linear, HyperbolicTangent, Sigmoid, ReLU
 from Network import Net
 from datasets import load_dataset
+from autograd import grad
 
 loader = load_dataset('mnist')
 x_train, x_test = np.array(loader['train']['image']).astype('float32'), np.array(loader['test']['image']).astype('float32')
