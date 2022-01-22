@@ -1,7 +1,27 @@
 import numpy as np
 
-class Tensor(np.ndarray):
-    def __init__(self):
-        super(Tensor, self).__init__()
-        self.grad = None
-        self.requires_grad = True
+class Tensor():
+    def __init__(self, data):
+        if isinstance(data, list):
+            try:
+                self.data:np.ndarray = np.asarray(data)
+            except:
+                raise NameError('data must be castable into numpy.ndarray')
+        elif isinstance(data, np.ndarray):
+            self.data:np.ndarray = data
+        else:
+            raise AttributeError('data must be either a ndarray or list, got {0}'.format(type(data)))
+        self.dtype = self.data.dtype
+        
+
+    def is_parameter(self):
+        return False
+        
+class Parameter(Tensor):
+    def __init__(self, data):
+        super(Tensor, self).__init__(data)
+    
+    def is_parameter(self):
+        return True
+
+
