@@ -1,5 +1,6 @@
 from module import Tanh, Linear, Module
-from tensor import Parameter
+from tensor import Parameter, Tensor
+import numpy as np
 class Net(Module):
     def __init__(self, in_features, out_features):
         super().__init__()
@@ -14,8 +15,8 @@ class Net(Module):
 
 if __name__ == '__main__':
     model = Net(2, 1)
-    print(model._parameters)
-    print(model._modules)
+    print(list(model._parameters))
+    print(list(model._modules))
     for idx, m in enumerate(model.named_modules()):
         print(idx, '->', m)
-    print(dir(model))
+    print(model(Tensor(np.ones(shape=(2,)))))

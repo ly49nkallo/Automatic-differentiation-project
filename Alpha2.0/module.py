@@ -1,19 +1,32 @@
 import numpy as np
 from autograd import grad
-from typing import Optional, Dict, Union, Set, Iterator
+from typing import Optional, Dict, Union, Set, Iterator, Callable, Any
 from tensor import Parameter, Tensor
 from collections import OrderedDict
 
+def _forward_unimplmented(self, *input: Any) -> None:
+    r'''This gets called as a placeholder if the programmer forgets
+         to implement a forward method (it is required!)'''
+    raise NotImplementedError('forward was not implemented >:(')
 
 class Module:
-    def __init__(self):
+    def __init__(self) -> None:
         self._parameters: Dict[str, Optional[Parameter]] = OrderedDict()
         self._modules: Dict[str, Optional['Module']] = OrderedDict()
 
     def __call__(self, x):
         self.forward(x)
 
-    def forward(self, x): raise NotImplementedError
+    forward: Callable[..., Any] = _forward_unimplmented
+    
+    # scalped pytorch code :)
+
+    def _call_impl(self, *input, **kwargs):
+        forward_call = self.forward
+        # assuming we have no forwards or backwards hooks bc i'm to lazy to figure out how to implement them
+        return forward_call(*input, **kwargs)
+
+    __call__ : Callable[..., Any] = _call_impl
 
     def register_parameter(self, name, param:Optional[Parameter]) -> None:
         if '_parameters' not in self.__dict__:
@@ -74,22 +87,17 @@ class Module:
     def named_modules(self, memo: Optional[Set['Module']] = None, prefix: str = '', remove_duplicate: bool = True):
         r"""Returns an iterator over all modules in the network, yielding
         both the name of the module as well as the module itself.
-
         Args:
             memo: a memo to store the set of modules already added to the result
             prefix: a prefix that will be added to the name of the module
             remove_duplicate: whether to remove the duplicated module instances in the result
             or not
-
         Yields:
             (string, Module): Tuple of name and module
-
         Note:
             Duplicate modules are returned only once. In the following
             example, ``l`` will be returned only once.
-
         """
-
         if memo is None:
             memo = set()
         if self not in memo:
@@ -105,10 +113,8 @@ class Module:
 
     def modules(self) -> Iterator['Module']:
         r"""Returns an iterator over all modules in the network.
-
         Yields:
             Module: a module in the network
-
         Note:
             Duplicate modules are returned only once. In the following
             example, ``l`` will be returned only once.
@@ -193,7 +199,7 @@ class Module:
     
 
 class Linear(Module):
-    def __init__(self, in_features, out_features):
+    def __init__(self, in_features, out_features) -> None:
         super().__init__()
         self.in_features = in_features
         self.out_features = out_features
@@ -201,10 +207,10 @@ class Linear(Module):
         self.weights = Parameter(np.random.uniform(-1, 1, (out_features, in_features)))
         self.bias = Parameter(np.random.uniform(-1, 1, (out_features,)))
 
-    def forward(self, x):
-        if len(x) != 1: raise NameError('only one tensor allowed as input')
-        x = x[0]
-        return np.add(np.dot(x, self.weights.T), self.bias)
+    # @TODO: make it so that tensors are usable like ndarrays, 
+    def forward(self, x:Tensor) -> np.ndarray:
+        print(type(self.weights.data.T), type(self.bias.data), type(x))
+        return np.add(np.dot(x.data, self.weights.data.T), self.bias.data)
 
 class Tanh(Module):
     def __init__(self):
