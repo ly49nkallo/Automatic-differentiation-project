@@ -1,6 +1,6 @@
 import numpy as np
 from autograd import grad
-from typing import Optional, Dict, Union
+from typing import Optional, Dict, Union, Set, Iterator
 from tensor import Parameter, Tensor
 from collections import OrderedDict
 
@@ -71,6 +71,52 @@ class Module:
             raise KeyError("module name can't be empty string \"\"")
         self._modules[name] = module
 
+    def named_modules(self, memo: Optional[Set['Module']] = None, prefix: str = '', remove_duplicate: bool = True):
+        r"""Returns an iterator over all modules in the network, yielding
+        both the name of the module as well as the module itself.
+
+        Args:
+            memo: a memo to store the set of modules already added to the result
+            prefix: a prefix that will be added to the name of the module
+            remove_duplicate: whether to remove the duplicated module instances in the result
+            or not
+
+        Yields:
+            (string, Module): Tuple of name and module
+
+        Note:
+            Duplicate modules are returned only once. In the following
+            example, ``l`` will be returned only once.
+
+        """
+
+        if memo is None:
+            memo = set()
+        if self not in memo:
+            if remove_duplicate:
+                memo.add(self)
+            yield prefix, self
+            for name, module in self._modules.items():
+                if module is None:
+                    continue
+                submodule_prefix = prefix + ('.' if prefix else '') + name
+                for m in module.named_modules(memo, submodule_prefix, remove_duplicate):
+                    yield m
+
+    def modules(self) -> Iterator['Module']:
+        r"""Returns an iterator over all modules in the network.
+
+        Yields:
+            Module: a module in the network
+
+        Note:
+            Duplicate modules are returned only once. In the following
+            example, ``l`` will be returned only once.
+        """
+
+        for _, module in self.named_modules():
+            yield module
+
     def __setstate__(self, state):
         self.__dict__.update(state)
 
@@ -79,10 +125,6 @@ class Module:
             _parameters = self.__dict__['_parameters']
             if name in _parameters:
                 return _parameters[name]
-        if '_buffers' in self.__dict__:
-            _buffers = self.__dict__['_buffers']
-            if name in _buffers:
-                return _buffers[name]
         if '_modules' in self.__dict__:
             modules = self.__dict__['_modules']
             if name in modules:
@@ -104,7 +146,7 @@ class Module:
             if params is None:
                 raise AttributeError(
                     "cannot assign parameters before Module.__init__() call")
-            remove_from(self.__dict__, self._buffers, self._modules, self._non_persistent_buffers_set)
+            remove_from(self.__dict__,  self._modules)
             self.register_parameter(name, value)
         elif params is not None and name in params:
             if value is not None:
@@ -118,7 +160,7 @@ class Module:
                 if modules is None:
                     raise AttributeError(
                         "cannot assign module before Module.__init__() call")
-                remove_from(self.__dict__, self._parameters, self._buffers, self._non_persistent_buffers_set)
+                remove_from(self.__dict__, self._parameters )
                 modules[name] = value
             elif modules is not None and name in modules:
                 if value is not None:
@@ -152,14 +194,12 @@ class Module:
 
 class Linear(Module):
     def __init__(self, in_features, out_features):
-        super(Linear, self).__init__()
+        super().__init__()
         self.in_features = in_features
         self.out_features = out_features
         # parameters
-        self.weights = np.random.uniform(-1, 1, (out_features, in_features))
-        self.bias = np.random.uniform(-1, 1, (out_features,))
-
-        self.parameters += [self.weights, self.bias]
+        self.weights = Parameter(np.random.uniform(-1, 1, (out_features, in_features)))
+        self.bias = Parameter(np.random.uniform(-1, 1, (out_features,)))
 
     def forward(self, x):
         if len(x) != 1: raise NameError('only one tensor allowed as input')
@@ -168,7 +208,7 @@ class Linear(Module):
 
 class Tanh(Module):
     def __init__(self):
-        super(Tanh, self).__init__()
+        super().__init__()
 
     def forward(self, x):
         return 1./(1 + np.exp(-x))

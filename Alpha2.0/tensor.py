@@ -19,7 +19,7 @@ class Tensor():
         
 class Parameter(Tensor):
     def __init__(self, data):
-        super(Tensor, self).__init__(data)
+        super().__init__(data)
     
     def is_parameter(self):
         return True
