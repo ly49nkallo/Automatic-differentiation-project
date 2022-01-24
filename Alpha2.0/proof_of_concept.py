@@ -14,9 +14,9 @@ weight = np.zeros((OUT_FEATURES,IN_FEATURES))
 weight2 = np.zeros((OUT_FEATURES,IN_FEATURES))
 bias = npr.random.uniform(-1, 1, size=(OUT_FEATURES,))
 bias2 = np.zeros((OUT_FEATURES,IN_FEATURES))
-inputs = np.ones((IN_FEATURES))
+inputs = np.random.rand((IN_FEATURES))
 outputs = sigmoid(np.add(np.dot(inputs, weight.T), bias))
-target = np.array([1]*OUT_FEATURES).astype(float)
+target = np.random.rand((OUT_FEATURES))
 print('inputs', inputs, inputs.shape)
 print('outputs', outputs, outputs.shape)
 print('target', target, target.shape)
@@ -32,7 +32,7 @@ print('gradient', gradient)
 # train
 history = []
 print(weight)
-for i in range(500):
+for i in range(100):
     weight = np.array([np.add(b, gradient) for b in weight.T])
     weight = weight.transpose()
     bias = np.add(bias, gradient)

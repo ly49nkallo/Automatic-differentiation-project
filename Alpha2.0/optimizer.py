@@ -8,4 +8,4 @@ class base_optimizer():
 class Primitive(base_optimizer):
     def __init__(self, parameters, lr):
         super(Primitive, self).__init__(parameters, lr)
-    def step(self):
+   # def step(self): 
