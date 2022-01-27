@@ -16,6 +16,15 @@ class Tensor():
 
     def is_parameter(self):
         return False
+
+    def shape(self):
+        return self.data.shape
+    
+    def size(self):
+        return self.data.size
+
+    def __repr__(self):
+        return '<<' + repr(self.shape()) + f' dtype = {self.data.dtype}' + repr(self.__class__) + '>>'
         
 class Parameter(Tensor):
     def __init__(self, data):

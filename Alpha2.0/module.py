@@ -1,6 +1,6 @@
 import numpy as np
 from autograd import grad
-from typing import Optional, Dict, Union, Set, Iterator, Callable, Any
+from typing import Optional, Dict, Union, Set, Iterator, Callable, Any, Tuple
 from tensor import Parameter, Tensor
 from collections import OrderedDict
 
@@ -11,6 +11,7 @@ def _forward_unimplmented(self, *input: Any) -> None:
 
 class Module:
     def __init__(self) -> None:
+        self.training = True
         self._parameters: Dict[str, Optional[Parameter]] = OrderedDict()
         self._modules: Dict[str, Optional['Module']] = OrderedDict()
 
@@ -123,6 +124,78 @@ class Module:
         for _, module in self.named_modules():
             yield module
 
+    def parameters(self, recurse: bool = True) -> Iterator[Parameter]:
+        r"""Returns an iterator over module parameters.
+
+        This is typically passed to an optimizer.
+
+        Args:
+            recurse (bool): if True, then yields parameters of this module
+                and all submodules. Otherwise, yields only parameters that
+                are direct members of this module.
+
+        Yields:
+            Parameter: module parameter
+
+        """
+        for name, param in self.named_parameters(recurse=recurse):
+            yield param
+
+    def named_parameters(self, prefix: str = '', recurse: bool = True) -> Iterator[Tuple[str, Parameter]]:
+        r"""Returns an iterator over module parameters, yielding both the
+        name of the parameter as well as the parameter itself.
+
+        Args:
+            prefix (str): prefix to prepend to all parameter names.
+            recurse (bool): if True, then yields parameters of this module
+                and all submodules. Otherwise, yields only parameters that
+                are direct members of this module.
+
+        Yields:
+            (string, Parameter): Tuple containing the name and parameter
+
+        Example::
+
+            >>> for name, param in self.named_parameters():
+            >>>    if name in ['bias']:
+            >>>        print(param.size())
+
+        """
+        gen = self._named_members(
+            lambda module: module._parameters.items(),
+            prefix=prefix, recurse=recurse)
+        for elem in gen:
+            yield elem
+
+    def parameters(self, recurse: bool = True) -> Iterator[Parameter]:
+        r"""Returns an iterator over module parameters.
+
+        This is typically passed to an optimizer.
+
+        Args:
+            recurse (bool): if True, then yields parameters of this module
+                and all submodules. Otherwise, yields only parameters that
+                are direct members of this module.
+
+        Yields:
+            Parameter: module parameter
+        """
+        for name, param in self.named_parameters(recurse=recurse):
+            yield param
+
+    def _named_members(self, get_members_fn, prefix='', recurse=True):
+        r"""Helper method for yielding various names + members of modules."""
+        memo = set()
+        modules = self.named_modules(prefix=prefix) if recurse else [(prefix, self)]
+        for module_prefix, module in modules:
+            members = get_members_fn(module)
+            for k, v in members:
+                if v is None or v in memo:
+                    continue
+                memo.add(v)
+                name = module_prefix + ('.' if module_prefix else '') + k
+                yield name, v
+
     def __setstate__(self, state):
         self.__dict__.update(state)
 
@@ -196,7 +269,13 @@ class Module:
         keys = [key for key in keys if not key[0].isdigit()]
 
         return sorted(keys)
-    
+
+class Tanh(Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x:Tensor):
+        return Tensor(1./(1 + np.exp(-x.data)))
 
 class Linear(Module):
     def __init__(self, in_features, out_features) -> None:
@@ -209,21 +288,4 @@ class Linear(Module):
 
     # @TODO: make it so that tensors are usable like ndarrays, 
     def forward(self, x:Tensor) -> np.ndarray:
-        print(type(self.weights.data.T), type(self.bias.data), type(x))
-        return np.add(np.dot(x.data, self.weights.data.T), self.bias.data)
-
-class Tanh(Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        return 1./(1 + np.exp(-x))
-
-
-
-
-
-
-
-
-        
+        return Tensor(np.add(np.dot(x.data, self.weights.data.T), self.bias.data))
