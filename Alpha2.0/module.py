@@ -9,6 +9,7 @@ def _forward_unimplmented(self, *input: Any) -> None:
          to implement a forward method (it is required!)'''
     raise NotImplementedError('forward was not implemented >:(')
 
+
 class Module:
     def __init__(self) -> None:
         self.training = True
@@ -19,6 +20,7 @@ class Module:
         self.forward(x)
 
     forward: Callable[..., Any] = _forward_unimplmented
+    data:np.ndarray
     
     # scalped pytorch code :)
 
@@ -269,6 +271,9 @@ class Module:
         keys = [key for key in keys if not key[0].isdigit()]
 
         return sorted(keys)
+
+    def __get__(self,instance, owner):
+        return self.data
 
 class Tanh(Module):
     def __init__(self):
