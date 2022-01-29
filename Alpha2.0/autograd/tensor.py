@@ -1,12 +1,22 @@
 import numpy as np
 from typing import List, NamedTuple, Callable, Optional, Union
 
+from torch import tensor
+
 Array_like = Union[float, list, np.ndarray]
-def to_array(array_like:Array_like):
+Tensorable = Union['Tensor', float, np.ndarray]
+
+def ensure_array(array_like:Array_like):
     if isinstance(array_like, np.ndarray):
         return array_like
     else:
         return np.array(array_like)
+
+def ensure_tensor(tensorable:Tensorable) -> 'Tensor':
+    if isinstance(tensorable, Tensor):
+        return tensorable
+    else:
+        return Tensor(tensorable)
 
 class Dependency(NamedTuple):
     tensor: 'Tensor'
@@ -17,7 +27,7 @@ class Tensor:
                 data:Array_like,
                 requires_grad:bool = False,
                 depends_on:List[Dependency] = None,) -> None:
-        self.data = to_array(data)
+        self.data = ensure_array(data)
         self.requires_grad = requires_grad
         self.depends_on = depends_on or []
         self.shape = self.data.shape
@@ -28,6 +38,12 @@ class Tensor:
 
     def __repr__(self):
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
+
+    def __add__(self, other) -> 'Tensor':
+        return _add(self, ensure_tensor(other))
+
+    def __radd__(self, other) -> 'Tensor':
+        return _add(ensure_tensor(other), self)
 
     def zero_grad(self) -> None:
         self.grad = Tensor(np.zeros_like(self.data))
@@ -50,6 +66,8 @@ class Tensor:
     def sum(self) -> None:
         return tensor_sum(self)
 
+'''TENSOR FUNCTIONS'''
+
 def tensor_sum(t: Tensor) -> Tensor:
     "Wraps the np.sum and returns a zero-tensor"
     data = t.data.sum()
@@ -68,7 +86,7 @@ def tensor_sum(t: Tensor) -> Tensor:
     
     return Tensor(data, requires_grad, depends_on)
 
-def add(t1: Tensor, t2: Tensor) -> Tensor:
+def _add(t1: Tensor, t2: Tensor) -> Tensor:
     data = t1.data + t2.data
     # if either component requires gradient computation, the sum must require it too
     requires_grad = t1.requires_grad or t2.requires_grad
@@ -157,4 +175,4 @@ def neg(t: Tensor) -> Tensor:
     return Tensor(data, requires_grad, depends_on)
 
 def sub(t1: Tensor, t2:Tensor) -> Tensor:
-    return add(t1, neg(t2))
+    return _add(t1, neg(t2))

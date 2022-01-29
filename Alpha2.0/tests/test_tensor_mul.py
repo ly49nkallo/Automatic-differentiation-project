@@ -1,7 +1,7 @@
 import unittest
 import pytest
 
-from autograd.tensor import Tensor, multiply, add
+from autograd.tensor import Tensor, multiply
 
 class TestTensorMul(unittest.TestCase):
     def test_simple_mul(self):
