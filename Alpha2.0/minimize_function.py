@@ -7,11 +7,13 @@ print(x.shape)
 
 history = []
 for i in range(10):
+    # reset the gradient of x to 0 like
     x.zero_grad()
-    sum_of_squares = tensor_sum(x * x)
+    sum_of_squares = (x * x).sum()
     sum_of_squares.backward()
 
     delta_x = Tensor(0.1) * x.grad
+    # this strips the gradient from x but we dont need to calculate backwards until next iteration
     x -= delta_x
     
     print(i, sum_of_squares)
