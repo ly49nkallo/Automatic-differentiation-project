@@ -90,18 +90,18 @@ class Tensor:
             else:
                 raise RuntimeError('grad must a specified for a non-0-dim tensor')
         
-        self.grad.data = self.grad.data + grad.data
+        self.grad.data = self.grad.data + grad.data #type: ignore
     
         for dependency in self.depends_on:
             backward_grad = dependency.grad_fn(grad.data)
             dependency.tensor.backward(Tensor(backward_grad))
 
-    def sum(self) -> None:
-        return tensor_sum(self)
+    def sum(self) -> 'Tensor':
+        return _tensor_sum(self)
 
 '''TENSOR FUNCTIONS'''
 
-def tensor_sum(t: Tensor) -> Tensor:
+def _tensor_sum(t: Tensor) -> Tensor:
     "Wraps the np.sum and returns a zero-tensor"
     data = t.data.sum()
     requires_grad = t.requires_grad
