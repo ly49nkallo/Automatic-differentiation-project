@@ -39,11 +39,44 @@ class Tensor:
     def __repr__(self):
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
 
-    def __add__(self, other) -> 'Tensor':
+    def __add__(self, other:Tensorable) -> 'Tensor':
         return _add(self, ensure_tensor(other))
 
-    def __radd__(self, other) -> 'Tensor':
+    def __radd__(self, other:Tensorable) -> 'Tensor':
         return _add(ensure_tensor(other), self)
+
+    def __iadd__(self, other:Tensorable) -> 'Tensor':
+        self.data = self.data + ensure_tensor(other).data
+        # invalidate the gradient
+        self.grad = None
+        return self
+
+    def __neg__(self) -> 'Tensor':
+        return _neg(self)
+
+    def __mul__(self, other:Tensorable) -> 'Tensor':
+        return _multiply(self, ensure_tensor(other))
+
+    def __rmul__(self, other:Tensorable) -> 'Tensor':
+        return _multiply(ensure_tensor(other), self)
+
+    def __imul__(self, other:Tensorable) -> 'Tensor':
+        self.data = self.data * ensure_tensor(other).data
+        # invalidate gradient
+        self.grad = None
+        return self
+
+    def __sub__(self, other:Tensorable) -> 'Tensor':
+        return _sub(self, ensure_tensor(other))
+
+    def __rsub__(self, other:Tensorable) -> 'Tensor':
+        return _sub(ensure_tensor(other), self)
+
+    def __isub__(self, other:Tensorable) -> 'Tensor':
+        self.data = self.data - ensure_tensor(other).data
+        # invalidate gradient
+        self.grad = None
+        return self
 
     def zero_grad(self) -> None:
         self.grad = Tensor(np.zeros_like(self.data))
@@ -126,7 +159,7 @@ def _add(t1: Tensor, t2: Tensor) -> Tensor:
 
     return Tensor(data, requires_grad, depends_on)
 
-def multiply(t1:Tensor, t2:Tensor) -> Tensor:
+def _multiply(t1:Tensor, t2:Tensor) -> Tensor:
     data = t1.data * t2.data
     requires_grad = t1.requires_grad or t2.requires_grad
     depends_on: List[Dependency] = []
@@ -163,7 +196,7 @@ def multiply(t1:Tensor, t2:Tensor) -> Tensor:
 
     return Tensor(data, requires_grad, depends_on)
 
-def neg(t: Tensor) -> Tensor:
+def _neg(t: Tensor) -> Tensor:
     data = -t.data
     requires_grad = t.requires_grad
     if t.requires_grad:
@@ -174,5 +207,5 @@ def neg(t: Tensor) -> Tensor:
         depends_on = []
     return Tensor(data, requires_grad, depends_on)
 
-def sub(t1: Tensor, t2:Tensor) -> Tensor:
-    return _add(t1, neg(t2))
+def _sub(t1: Tensor, t2:Tensor) -> Tensor:
+    return t1 + -t2
