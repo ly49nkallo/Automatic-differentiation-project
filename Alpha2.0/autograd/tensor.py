@@ -1,7 +1,6 @@
+from warnings import WarningMessage, warn
 import numpy as np
 from typing import List, NamedTuple, Callable, Optional, Union
-
-from torch import tensor
 
 Array_like = Union[float, list, np.ndarray]
 Tensorable = Union['Tensor', float, np.ndarray]
@@ -36,6 +35,17 @@ class Tensor:
         if self.requires_grad:
             self.zero_grad()
 
+    @property
+    def data(self) -> np.ndarray:
+        return self._data
+
+    @data.setter
+    def data(self, value):
+        self._data = value
+        # setting data invalidates the tensor gradient
+        warn('Tensors are normally immutable - setting value invalidates it')
+        self.grad = None
+
     def __repr__(self):
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
 
@@ -47,8 +57,6 @@ class Tensor:
 
     def __iadd__(self, other:Tensorable) -> 'Tensor':
         self.data = self.data + ensure_tensor(other).data
-        # invalidate the gradient
-        self.grad = None
         return self
 
     def __neg__(self) -> 'Tensor':
@@ -62,8 +70,6 @@ class Tensor:
 
     def __imul__(self, other:Tensorable) -> 'Tensor':
         self.data = self.data * ensure_tensor(other).data
-        # invalidate gradient
-        self.grad = None
         return self
 
     def __sub__(self, other:Tensorable) -> 'Tensor':
