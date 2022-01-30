@@ -111,6 +111,9 @@ class Tensor:
     def sum(self) -> 'Tensor':
         return _tensor_sum(self)
 
+    def tansig(self) -> 'Tensor':
+        return _tansig(self)
+
 '''TENSOR FUNCTIONS'''
 
 def _tensor_sum(t: Tensor) -> Tensor:
@@ -230,6 +233,8 @@ def _matmul(t1: Tensor, t2: Tensor) -> Tensor:
         grad1 = grad3 @ t2.T
         grad2 = t1.T @ grad3
     """
+    #if t1.data.ndim == 1:
+
     data = t1.data @ t2.data
     requires_grad = t1.requires_grad or t2.requires_grad
 
@@ -261,6 +266,19 @@ def _slice(t: Tensor, idxs) -> Tensor:
             return bigger_grad
 
         depends_on = Dependency(t, grad_fn)
+    else:
+        depends_on = []
+
+    return Tensor(data, requires_grad, depends_on)
+
+def _tansig(t:Tensor) -> Tensor:
+    data = 1 / (1 + np.exp(-t.data))
+    requires_grad = t.requires_grad
+    if requires_grad:
+        def grad_fn(grad:np.ndarray) -> np.ndarray:
+            return grad * (data * (1 - data))
+        
+        depends_on = [Dependency(t, grad_fn)]
     else:
         depends_on = []
 

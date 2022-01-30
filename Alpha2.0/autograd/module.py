@@ -274,3 +274,22 @@ class Module:
 
     def __get__(self,instance, owner):
         return self.data
+
+class Linear(Module):
+    def __init__(self, in_features, out_features) -> None:
+        super().__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        assert isinstance(self.in_features, int) and isinstance(self.out_features, int), "features count must be an integer"
+        self.w = Parameter( self.in_features, self.out_features)
+        self.b = Parameter(self.out_features)
+
+    def forward(self, x):
+        return x @ self.w + self.b
+
+class Sigmoid(Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return x.tansig()
