@@ -1,7 +1,7 @@
 import numpy as np
-from autograd import grad
 from typing import Optional, Dict, Union, Set, Iterator, Callable, Any, Tuple
-from autograd import Tensor
+from autograd.tensor import Tensor
+from autograd.parameter import Parameter
 from collections import OrderedDict
 
 def _forward_unimplmented(self, *input: Any) -> None:
@@ -274,23 +274,3 @@ class Module:
 
     def __get__(self,instance, owner):
         return self.data
-
-class Tanh(Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x:Tensor):
-        return Tensor(1./(1 + np.exp(-x.data)))
-
-class Linear(Module):
-    def __init__(self, in_features, out_features) -> None:
-        super().__init__()
-        self.in_features = in_features
-        self.out_features = out_features
-        # parameters
-        self.weights = Tensor(np.random.uniform(-1, 1, (out_features, in_features)))
-        self.bias = Tensor(np.random.uniform(-1, 1, (out_features,)))
-
-    # @TODO: make it so that tensors are usable like ndarrays, 
-    def forward(self, x:Tensor) -> np.ndarray:
-        return Tensor(np.add(np.dot(x.data, self.weights.data.T), self.bias.data))

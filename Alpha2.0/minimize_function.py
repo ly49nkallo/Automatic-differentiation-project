@@ -1,6 +1,6 @@
 
 import matplotlib.pyplot as plt
-from autograd.tensor import Tensor, tensor_sum
+from autograd.tensor import Tensor
 
 x = Tensor([10, -10, 5, -9, 2, 5], requires_grad=True)
 print(x.shape)
@@ -19,6 +19,6 @@ for i in range(10):
     print(i, sum_of_squares)
     history.append(float(sum_of_squares.data))
 
-plt.plot(history)
+plt.plot(history, 'rs')
 plt.title('Minimise sum of squares')
 plt.show()

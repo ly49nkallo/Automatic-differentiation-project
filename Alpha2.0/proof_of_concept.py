@@ -1,6 +1,6 @@
 from doctest import OutputChecker
 import autograd.numpy as np
-from autograd import grad, jacobian, tensor_jacobian_product, hessian_tensor_product
+from autograd import grad
 import numpy as npr
 import matplotlib.pyplot as plt
 
