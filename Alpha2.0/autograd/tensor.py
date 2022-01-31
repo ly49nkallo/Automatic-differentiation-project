@@ -1,6 +1,7 @@
 from warnings import WarningMessage, warn
 import numpy as np
 from typing import List, NamedTuple, Callable, Optional, Union
+from autograd.functional import *
 
 Array_like = Union[float, list, np.ndarray]
 Tensorable = Union['Tensor', float, np.ndarray]
@@ -113,6 +114,15 @@ class Tensor:
 
     def tansig(self) -> 'Tensor':
         return _tansig(self)
+
+    def tanh(self) -> 'Tensor':
+        return _tanh(self)
+
+    def relu(self) -> 'Tensor':
+        return _relu(self)
+    
+    def identity(self) -> 'Tensor':
+        return _identity(self)
 
 '''TENSOR FUNCTIONS'''
 
@@ -283,3 +293,57 @@ def _tansig(t:Tensor) -> Tensor:
         depends_on = []
 
     return Tensor(data, requires_grad, depends_on)
+
+def _tanh(t:Tensor) -> Tensor:
+    data = (np.exp(t.data) - np.exp(-t.data) / np.exp(t.data) + np.exp(-t.data))
+    requires_grad = t.requires_grad
+    if requires_grad:
+        def grad_fn(grad:np.ndarray) -> np.ndarray:
+            return grad * (1- (data * data))
+        depends_on = [Dependency(t, grad_fn)]
+    else:
+        depends_on = []
+    
+    return Tensor(data, requires_grad, depends_on)
+
+def _relu(t:Tensor) -> Tensor:
+    data = np.maximum(t.data, np.zeros_like(t.data))
+    requires_grad = t.requires_grad
+    if requires_grad:
+        def grad_fn(grad:np.ndarray) -> np.ndarray:
+            # the derivative of relu is 0 if x<0 and 1 if x>0
+            return np.maximum(grad, np.zeros_like(grad))
+        depends_on = [Dependency(t, grad_fn)]
+    else:
+        depends_on = []
+
+    return Tensor(data, requires_grad, depends_on)
+
+def _identity(t:Tensor) -> Tensor:
+    return Tensor(t.data, t.requires_grad, [Dependency(t, lambda x: x)])
+
+def _exp(t:Tensor) -> Tensor:
+    data = np.exp(t.data)
+    requires_grad = t.requires_grad
+    if requires_grad:
+        # the derivative of the natural exponential function is itself
+        depends_on = [Dependency(t, lambda grad: grad * data)]
+    else:
+        depends_on = []
+    return Tensor(data, requires_grad, depends_on)
+
+def _softmax(t:Tensor) -> Tensor:
+    data = (_exp(t) - _exp(-t)) / (_exp(t) + _exp(-t))
+    requires_grad = t.requires_grad
+    if requires_grad:
+        def grad_fn(grad:np.ndarray) -> np.ndarray:
+            # the shit
+            return
+        depends_on = [Dependency(t, grad_fn)]
+    else:
+        depends_on = []
+
+    return Tensor(data, requires_grad, depends_on)
+
+def _mse(t:Tensor) -> Tensor:
+    pass

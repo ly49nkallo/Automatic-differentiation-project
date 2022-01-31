@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 
 from autograd import Tensor, Module
 from autograd.optim import SGD
-from autograd.module import Linear, Sigmoid
+from autograd.module import Linear
+from autograd.activation import Sigmoid
 
 def xor_gate(a, b):
     assert isinstance(a, int) and isinstance(b, int)
