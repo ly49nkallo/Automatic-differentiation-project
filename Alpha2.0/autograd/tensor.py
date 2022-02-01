@@ -1,7 +1,6 @@
 from warnings import WarningMessage, warn
 import numpy as np
 from typing import List, NamedTuple, Callable, Optional, Union
-from autograd.functional import *
 
 Array_like = Union[float, list, np.ndarray]
 Tensorable = Union['Tensor', float, np.ndarray]
@@ -50,6 +49,10 @@ class Tensor:
     def __repr__(self):
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
 
+    def truth(self):
+        warn('truth value of tensor defaults to its data')
+        return self.data.truth()
+
     def __add__(self, other:Tensorable) -> 'Tensor':
         return _add(self, ensure_tensor(other))
 
@@ -87,6 +90,9 @@ class Tensor:
         # invalidate gradient
         self.grad = None
         return self
+
+    def __truediv__(self, other:Tensorable) -> 'Tensor':
+        return _truediv(self, ensure_tensor(other))
     
     def __getitem__(self, idxs) -> 'Tensor':
         return _slice(self, idxs)
@@ -112,6 +118,9 @@ class Tensor:
     def sum(self) -> 'Tensor':
         return _tensor_sum(self)
 
+    def exp(self) -> 'Tensor':
+        return _exp(self)
+
     def tansig(self) -> 'Tensor':
         return _tansig(self)
 
@@ -123,6 +132,9 @@ class Tensor:
     
     def identity(self) -> 'Tensor':
         return _identity(self)
+
+    def softmax(self) -> 'Tensor':
+        return _softmax(self)
 
 '''TENSOR FUNCTIONS'''
 
@@ -265,6 +277,43 @@ def _matmul(t1: Tensor, t2: Tensor) -> Tensor:
                   requires_grad,
                   depends_on)
 
+def _truediv(t1:Tensor, t2:Tensor) -> Tensor:
+    data = t1.data / t2.data
+    requires_grad = t1.requires_grad or t2.requires_grad
+    depends_on: List[Dependency] = []
+
+    if t1.requires_grad:
+        def grad_fn1(grad: np.ndarray) -> np.ndarray:
+            grad = grad / t2.data
+            ndim_added = grad.ndim - t1.data.ndim
+            for _ in range(ndim_added):
+                grad = grad.sum(axis=0)
+
+            for i, dim in enumerate(t1.shape):
+                if dim == 1:
+                    grad = grad.sum(axis=i, keepdims=True)
+
+            return grad
+        
+        depends_on.append(Dependency(t1, grad_fn1))
+
+    if t2.requires_grad:
+        def grad_fn1(grad: np.ndarray) -> np.ndarray:
+            grad = grad / t1.data
+            ndim_added = grad.ndim - t2.data.ndim
+            for _ in range(ndim_added):
+                grad = grad.sum(axis=0)
+
+            for i, dim in enumerate(t2.shape):
+                if dim == 1:
+                    grad = grad.sum(axis=i, keepdims=True)
+
+            return grad
+        
+        depends_on.append(Dependency(t2, grad_fn1))
+
+    return Tensor(data, requires_grad, depends_on)
+
 def _slice(t: Tensor, idxs) -> Tensor:
     data = t.data[idxs]
     requires_grad = t.requires_grad
@@ -333,17 +382,7 @@ def _exp(t:Tensor) -> Tensor:
     return Tensor(data, requires_grad, depends_on)
 
 def _softmax(t:Tensor) -> Tensor:
-    data = (_exp(t) - _exp(-t)) / (_exp(t) + _exp(-t))
-    requires_grad = t.requires_grad
-    if requires_grad:
-        def grad_fn(grad:np.ndarray) -> np.ndarray:
-            # the shit
-            return
-        depends_on = [Dependency(t, grad_fn)]
-    else:
-        depends_on = []
-
-    return Tensor(data, requires_grad, depends_on)
+    return _exp(t) / (_exp(t).sum())
 
 def _mse(t:Tensor) -> Tensor:
     pass
