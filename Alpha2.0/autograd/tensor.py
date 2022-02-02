@@ -141,6 +141,9 @@ class Tensor:
     def softmax(self) -> 'Tensor':
         return _softmax(self)
 
+    def ln(self) -> 'Tensor':
+        return _log(self)
+
 '''TENSOR FUNCTIONS'''
 
 def _tensor_sum(t: Tensor) -> Tensor:
@@ -402,5 +405,16 @@ def _exp(t:Tensor) -> Tensor:
 def _softmax(t:Tensor) -> Tensor:
     return _exp(t) / (_exp(t).sum())
 
-def _mse(t:Tensor) -> Tensor:
-    pass
+number = Union[float, int, np.float32, np.float64, np.intp]
+
+def _log(t:Tensor, base:Optional[number] = None):
+    assert base is None, "non natural logorithims not implemented"
+    data = np.log(t.data)
+    requires_grad = t.requires_grad
+    if requires_grad:
+        depends_on = [Dependency(t, lambda grad: grad / t.data)]
+    else:
+        depends_on = []
+
+    return Tensor(data, requires_grad, depends_on)
+

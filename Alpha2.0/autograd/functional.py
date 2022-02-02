@@ -1,4 +1,4 @@
-from autograd.tensor import Tensor, Dependency
+from autograd.tensor import Tensor, Dependency, _log
 #import autograd
 #Tensor = autograd.tensor.Tensor
 import numpy as np
@@ -33,16 +33,28 @@ def identity(t:Tensor) -> Tensor:
 
 def softmax(t:Tensor) -> Tensor:
     data = np.exp(t.data) / (np.sum(np.exp(t.data)))
+    raise NotImplementedError()
 
 def mse(output:Tensor, labels:Tensor) -> Tensor: 
     return ((labels - output) ** 2).sum() / Tensor(labels.size())
 
 # also called cross entropy loss due to it's usage by statistical analysis (minxent)
 # https://gombru.github.io/assets/cross_entropy_loss/intro.png
-def nll(output:Tensor, labels:Tensor) -> Tensor:
-    r'''AKA Cross entropy loss by statastitians or negative log likelihhood (NLL)
+def minxent(output:Tensor, labels:Tensor, is_one_hot = True) -> Tensor:
+    r'''AKA Categorical Cross entropy loss by statastitians or negative log likelihood (NLL)
         Args:
             output (Tensor): the input tensor (preferably softmaxed)
-            labels (Tensor): a tensor containing the ground truth (preferably one-hot vector)'''
-    raise NotImplementedError('Still need to implement tensor_log')
+            label (Tensor): a tensor containing the ground truth (preferably one-hot vector)'''
     
+    # output.shape (batch_size, num_classes)
+    # labels.shape (batch_size, )
+    
+    return -(labels * log(output)).sum()
+
+
+def binxent(output:Tensor, labels:Tensor) -> Tensor:
+    r''' Binary Cross Entopy, takes binary labels'''
+    raise NotImplementedError()
+    
+def log(t1:Tensor) -> Tensor:
+    return _log(t1)
