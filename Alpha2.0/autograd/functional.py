@@ -37,10 +37,10 @@ def softmax(t:Tensor) -> Tensor:
 def mse(output:Tensor, labels:Tensor) -> Tensor: 
     return ((labels - output) ** 2).sum() / Tensor(labels.size())
 
-# also called cross entropy loss due to it's usage by statistical analysis
+# also called cross entropy loss due to it's usage by statistical analysis (minxent)
 # https://gombru.github.io/assets/cross_entropy_loss/intro.png
-def negative_log_likelihood(output:Tensor, labels:Tensor) -> Tensor:
-    r'''AKA Cross entropy loss by statastitians
+def nll(output:Tensor, labels:Tensor) -> Tensor:
+    r'''AKA Cross entropy loss by statastitians or negative log likelihhood (NLL)
         Args:
             output (Tensor): the input tensor (preferably softmaxed)
             labels (Tensor): a tensor containing the ground truth (preferably one-hot vector)'''

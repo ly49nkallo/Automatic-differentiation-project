@@ -94,6 +94,11 @@ class Tensor:
     def __truediv__(self, other:Tensorable) -> 'Tensor':
         return _truediv(self, ensure_tensor(other))
     
+    def __pow__(self, other:Tensorable) -> 'Tensor':
+        if int(ensure_tensor(other).data) == 2:
+            return self * self
+        else:
+            raise NotImplementedError("High degree exponentials not implemented yet!")
     def __getitem__(self, idxs) -> 'Tensor':
         return _slice(self, idxs)
 
