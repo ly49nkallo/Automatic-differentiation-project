@@ -1,7 +1,9 @@
 from autograd.tensor import Tensor, Dependency
+#import autograd
+#Tensor = autograd.tensor.Tensor
 import numpy as np
 
-def _tanh(t:Tensor) -> Tensor:
+def tanh(t:Tensor) -> Tensor:
     data = (np.exp(t.data) - np.exp(-t.data) / np.exp(t.data) + np.exp(-t.data))
     requires_grad = t.requires_grad
     if requires_grad:
@@ -13,7 +15,7 @@ def _tanh(t:Tensor) -> Tensor:
     
     return Tensor(data, requires_grad, depends_on)
 
-def _relu(t:Tensor) -> Tensor:
+def relu(t:Tensor) -> Tensor:
     data = np.maximum(t.data, np.zeros_like(t.data))
     requires_grad = t.requires_grad
     if requires_grad:
@@ -26,10 +28,21 @@ def _relu(t:Tensor) -> Tensor:
 
     return Tensor(data, requires_grad, depends_on)
 
-def _identity(t:Tensor) -> Tensor:
+def identity(t:Tensor) -> Tensor:
     return Tensor(t.data, t.requires_grad, [Dependency(t, lambda x: x)])
 
-def _softmax(t:Tensor) -> Tensor:
+def softmax(t:Tensor) -> Tensor:
     data = np.exp(t.data) / (np.sum(np.exp(t.data)))
 
-def _mse(t:Tensor) -> Tensor: pass
+def mse(output:Tensor, labels:Tensor) -> Tensor: 
+    return ((labels - output) ** 2).sum() / Tensor(labels.size())
+
+# also called cross entropy loss due to it's usage by statistical analysis
+# https://gombru.github.io/assets/cross_entropy_loss/intro.png
+def negative_log_likelihood(output:Tensor, labels:Tensor) -> Tensor:
+    r'''AKA Cross entropy loss by statastitians
+        Args:
+            output (Tensor): the input tensor (preferably softmaxed)
+            labels (Tensor): a tensor containing the ground truth (preferably one-hot vector)'''
+    raise NotImplementedError('Still need to implement tensor_log')
+    

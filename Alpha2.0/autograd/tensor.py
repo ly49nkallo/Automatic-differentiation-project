@@ -101,7 +101,7 @@ class Tensor:
         self.grad = Tensor(np.zeros_like(self.data))
 
     def backward(self, grad:'Tensor' = None):
-        assert self.requires_grad, "somehow called backwards on tensor that doesn't require gradient"
+        assert self.requires_grad, "called backwards on tensor that doesn't require gradient"
 
         if grad is None:
             if self.shape == ():
@@ -157,6 +157,8 @@ def _tensor_sum(t: Tensor) -> Tensor:
     return Tensor(data, requires_grad, depends_on)
 
 def _add(t1: Tensor, t2: Tensor) -> Tensor:
+    # f(x, y) = x+y
+    # Dxf(x,y) = 1
     data = t1.data + t2.data
     # if either component requires gradient computation, the sum must require it too
     requires_grad = t1.requires_grad or t2.requires_grad
@@ -197,6 +199,9 @@ def _add(t1: Tensor, t2: Tensor) -> Tensor:
     return Tensor(data, requires_grad, depends_on)
 
 def _multiply(t1:Tensor, t2:Tensor) -> Tensor:
+    # f(x,y) = xy
+    # Dxf(x,y) = cx
+    # Dyf(x,y) = cy
     data = t1.data * t2.data
     requires_grad = t1.requires_grad or t2.requires_grad
     depends_on: List[Dependency] = []
@@ -217,7 +222,7 @@ def _multiply(t1:Tensor, t2:Tensor) -> Tensor:
         depends_on.append(Dependency(t1, grad_fn1))
 
     if t2.requires_grad:
-        def grad_fn1(grad: np.ndarray) -> np.ndarray:
+        def grad_fn2(grad: np.ndarray) -> np.ndarray:
             grad = grad * t1.data
             ndim_added = grad.ndim - t2.data.ndim
             for _ in range(ndim_added):
@@ -229,7 +234,7 @@ def _multiply(t1:Tensor, t2:Tensor) -> Tensor:
 
             return grad
         
-        depends_on.append(Dependency(t2, grad_fn1))
+        depends_on.append(Dependency(t2, grad_fn2))
 
     return Tensor(data, requires_grad, depends_on)
 
@@ -278,12 +283,19 @@ def _matmul(t1: Tensor, t2: Tensor) -> Tensor:
                   depends_on)
 
 def _truediv(t1:Tensor, t2:Tensor) -> Tensor:
+    # f(x,y) = x/y
+    # Dxf(x,y) = Dx x/c = 1/c * Dxx = 1/c
+    # Dyf(x,y) = Dy c/y = c * Dy 1/y = c * (-x/y**2)
+
+    # https://www.wolframalpha.com/input?i=partial+derivative+of+x%2Fy
+
     data = t1.data / t2.data
     requires_grad = t1.requires_grad or t2.requires_grad
     depends_on: List[Dependency] = []
 
     if t1.requires_grad:
         def grad_fn1(grad: np.ndarray) -> np.ndarray:
+            # D x/c 
             grad = grad / t2.data
             ndim_added = grad.ndim - t1.data.ndim
             for _ in range(ndim_added):
@@ -298,8 +310,8 @@ def _truediv(t1:Tensor, t2:Tensor) -> Tensor:
         depends_on.append(Dependency(t1, grad_fn1))
 
     if t2.requires_grad:
-        def grad_fn1(grad: np.ndarray) -> np.ndarray:
-            grad = grad / t1.data
+        def grad_fn2(grad: np.ndarray) -> np.ndarray:
+            grad = grad * -(t1.data / (t2.data ** 2))
             ndim_added = grad.ndim - t2.data.ndim
             for _ in range(ndim_added):
                 grad = grad.sum(axis=0)
@@ -310,7 +322,7 @@ def _truediv(t1:Tensor, t2:Tensor) -> Tensor:
 
             return grad
         
-        depends_on.append(Dependency(t2, grad_fn1))
+        depends_on.append(Dependency(t2, grad_fn2))
 
     return Tensor(data, requires_grad, depends_on)
 
@@ -372,6 +384,7 @@ def _identity(t:Tensor) -> Tensor:
     return Tensor(t.data, t.requires_grad, [Dependency(t, lambda x: x)])
 
 def _exp(t:Tensor) -> Tensor:
+    # d(e**x)/dx = 
     data = np.exp(t.data)
     requires_grad = t.requires_grad
     if requires_grad:
