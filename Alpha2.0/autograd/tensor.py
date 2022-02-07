@@ -160,7 +160,9 @@ def _tensor_sum(t: Tensor, axis:Optional[int] = None, keep_dims:bool = False) ->
                 return grad * np.ones_like(t.data)
             else:
                 ''' grad is a tensor that is the same shape as t.data minus the summed out axis'''
-                shape = t.shape[:axis]+t.shape[:axis+1]
+                print('shape', t.shape)
+                shape = t.shape[:axis]+t.shape[axis+1:]
+                print('shape', shape)
                 return grad * np.ones(shape)
         depends_on = [Dependency(t, grad_fn)]
     else:
