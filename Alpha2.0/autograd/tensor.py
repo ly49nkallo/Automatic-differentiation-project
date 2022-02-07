@@ -120,8 +120,8 @@ class Tensor:
             backward_grad = dependency.grad_fn(grad.data)
             dependency.tensor.backward(Tensor(backward_grad))
 
-    def sum(self) -> 'Tensor':
-        return _tensor_sum(self)
+    def sum(self, axis:Optional[int] = None) -> 'Tensor':
+        return _tensor_sum(self, axis=axis)
 
     def exp(self) -> 'Tensor':
         return _exp(self)
@@ -146,23 +146,28 @@ class Tensor:
 
 '''TENSOR FUNCTIONS'''
 
-def _tensor_sum(t: Tensor) -> Tensor:
+def _tensor_sum(t: Tensor, axis:Optional[int] = None, keep_dims:bool = False) -> Tensor:
     "Wraps the np.sum and returns a zero-tensor"
-    data = t.data.sum()
+    data = t.data.sum(axis=axis,) #keepdims=keep_dims)
     requires_grad = t.requires_grad
 
     if requires_grad:
         def grad_fn(grad: np.ndarray) -> np.ndarray:
-            '''
-                grad is a zero-tensor so each element contributes that much
-            '''
-            return grad * np.ones_like(t.data)
-
+            if axis is None:
+                '''
+                    grad is a zero-tensor so each element contributes that much
+                '''
+                return grad * np.ones_like(t.data)
+            else:
+                ''' grad is a tensor that is the same shape as t.data minus the summed out axis'''
+                shape = t.shape[:axis]+t.shape[:axis+1]
+                return grad * np.ones(shape)
         depends_on = [Dependency(t, grad_fn)]
     else:
         depends_on = []
     
     return Tensor(data, requires_grad, depends_on)
+    
 
 def _add(t1: Tensor, t2: Tensor) -> Tensor:
     # f(x, y) = x+y

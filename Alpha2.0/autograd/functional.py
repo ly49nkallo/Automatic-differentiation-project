@@ -40,7 +40,7 @@ def mse(output:Tensor, labels:Tensor) -> Tensor:
 
 # also called cross entropy loss due to it's usage by statistical analysis (minxent)
 # https://gombru.github.io/assets/cross_entropy_loss/intro.png
-def minxent(output:Tensor, labels:Tensor, is_one_hot = True) -> Tensor:
+def minxent(X:Tensor, y:Tensor, is_one_hot = True) -> Tensor:
     r'''AKA Categorical Cross entropy loss by statastitians or negative log likelihood (NLL)
         Args:
             output (Tensor): the input tensor (preferably softmaxed)
@@ -48,8 +48,10 @@ def minxent(output:Tensor, labels:Tensor, is_one_hot = True) -> Tensor:
     
     # output.shape (batch_size, num_classes)
     # labels.shape (batch_size, )
+    #m = y.shape[0]
+    m = y.shape[0]
     
-    return -(labels * log(output)).sum()
+    return -((log(X) * y).sum()) / Tensor(m)
 
 
 def binxent(output:Tensor, labels:Tensor) -> Tensor:

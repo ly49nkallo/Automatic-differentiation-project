@@ -8,8 +8,10 @@ from autograd.module import Module, Linear
 from autograd.activation import Sigmoid, Tanh, Softmax
 
 def main():
-    pass
-
+    loader = Dataloader('mnist', 4)
+    for idx, (data, labels) in enumerate(loader):
+        print(idx, data, labels)
+        if idx > 10: break
 '''Author: Ty Brennan'''
 
 from datasets import load_dataset
