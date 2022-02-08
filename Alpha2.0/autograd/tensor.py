@@ -141,8 +141,11 @@ class Tensor:
     def softmax(self) -> 'Tensor':
         return _softmax(self)
 
-    def ln(self) -> 'Tensor':
+    def log(self) -> 'Tensor':
         return _log(self)
+
+    def abs(self) -> 'Tensor':
+        return _abs(self)
 
 '''TENSOR FUNCTIONS'''
 
@@ -154,7 +157,7 @@ def _tensor_sum(t: Tensor, axis:Optional[int] = None, keep_dims:bool = False) ->
     if requires_grad:
         def grad_fn(grad: np.ndarray) -> np.ndarray:
             if axis is None:
-                '''
+                '''+
                     grad is a zero-tensor so each element contributes that much
                 '''
                 return grad * np.ones_like(t.data)
@@ -414,10 +417,21 @@ number = Union[float, int, np.float32, np.float64, np.intp]
 
 def _log(t:Tensor, base:Optional[number] = None):
     assert base is None, "non natural logorithims not implemented"
+    print(t)
     data = np.log(t.data)
     requires_grad = t.requires_grad
     if requires_grad:
         depends_on = [Dependency(t, lambda grad: grad / t.data)]
+    else:
+        depends_on = []
+
+    return Tensor(data, requires_grad, depends_on)
+
+def _abs(t:Tensor) -> Tensor:
+    data = np.abs(t.data)
+    requires_grad = t.requires_grad
+    if requires_grad:
+        depends_on = [Dependency(t, np.abs)]
     else:
         depends_on = []
 
