@@ -22,15 +22,13 @@ class TestTensorSum(unittest.TestCase):
         assert t1.grad.data.tolist() == [3, 3, 3]
 
     def test_sum_along_axis(self):
-        t1 = Tensor(np.arange(9).reshape(3,3), requires_grad=True)
+        t1 = Tensor(np.arange(3**4).reshape(3,3,3,3), requires_grad=True)
         t2 = t1.sum(axis = 1)
-        t3 = t1.sum(axis = 1)
 
-        t2.backward(Tensor([2,1,1]))
+        t2.backward(Tensor([[[1,2,3] for _ in range(3)] for _ in range(3)]))
 
         #assert t2.data.tolist() == [9, 12, 15]
-        assert t3.data.tolist() == [3, 12, 21]
         print(t2.data)
-        print(t1.grad)
+        print(t1.grad.shape)
         
-        assert t1.grad.data.tolist() == np.ones((3,3)).tolist()
+        assert t1.grad.data.tolist() == [[[[1,2,3] for _ in range(3)] for _ in range(3)] for _ in range(3)]
