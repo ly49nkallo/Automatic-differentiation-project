@@ -69,15 +69,17 @@ def one_hot_encode(t1:Tensor) -> Tensor:
     # t1.shape == (num_of_batches, batch_size,)
     # data.shape == (num_of_batches, batch_size, num_of_values)
     # @TODO clean up this code it is amazingly sloppy
+    has_multiple_batches = True
     data = t1.data
     if data.ndim == 1:
+        has_multiple_batches = False
         data = np.expand_dims(data, 0)
     assert data.ndim == 2
     data = np.zeros(list(data.shape) + [t1.data.max() + 1])
     assert data.ndim == 3, data.shape
     data[np.arange(data.shape[0]), np.arange(data.shape[1]), t1.data] = 1
     print(data.shape)
-    if data.shape[0] == 1:
+    if not has_multiple_batches:
         data = data.squeeze(axis = 0)
     
     return Tensor(data)
