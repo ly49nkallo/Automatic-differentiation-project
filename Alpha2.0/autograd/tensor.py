@@ -433,7 +433,8 @@ def _abs(t:Tensor) -> Tensor:
     data = np.abs(t.data)
     requires_grad = t.requires_grad
     if requires_grad:
-        depends_on = [Dependency(t, np.abs)]
+        depends_on = [Dependency(t, 
+                                lambda grad : grad * np.vectorize(lambda x: 2. * int(x >= 0) - 1.) (t.data))]
     else:
         depends_on = []
 

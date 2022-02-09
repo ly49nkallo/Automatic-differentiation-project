@@ -44,6 +44,3 @@ def test_simple_minxent():
     plt.show()
 
 test_simple_minxent()
-    
-        
-        

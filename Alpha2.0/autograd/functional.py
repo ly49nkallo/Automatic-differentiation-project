@@ -50,7 +50,8 @@ def minxent(X:Tensor, y:Tensor, is_one_hot = True) -> Tensor:
     # labels.shape (batch_size, )
     #m = y.shape[0]
     m = y.shape[0]
-    
+    if not is_one_hot:
+        y = one_hot_encode(y)
     return -((log(X) * y).sum()) / Tensor(m)
 
 
@@ -60,3 +61,23 @@ def binxent(output:Tensor, labels:Tensor) -> Tensor:
     
 def log(t1:Tensor) -> Tensor:
     return _log(t1)
+
+def one_hot_encode(t1:Tensor) -> Tensor:
+    r''' A utility function that takes a tensor and returns a one hot encoding
+            (note: this function should be used on non gradient tracking tensors only'''
+
+    # t1.shape == (num_of_batches, batch_size,)
+    # data.shape == (num_of_batches, batch_size, num_of_values)
+    # @TODO clean up this code it is amazingly sloppy
+    data = t1.data
+    if data.ndim == 1:
+        data = np.expand_dims(data, 0)
+    assert data.ndim == 2
+    data = np.zeros(list(data.shape) + [t1.data.max() + 1])
+    assert data.ndim == 3, data.shape
+    data[np.arange(data.shape[0]), np.arange(data.shape[1]), t1.data] = 1
+    print(data.shape)
+    if data.shape[0] == 1:
+        data = data.squeeze(axis = 0)
+    
+    return Tensor(data)
