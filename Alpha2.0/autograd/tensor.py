@@ -365,7 +365,10 @@ def _slice(t: Tensor, idxs) -> Tensor:
     return Tensor(data, requires_grad, depends_on)
 
 def _tansig(t:Tensor) -> Tensor:
-    data = 1 / (1 + np.exp(-t.data))
+    try:
+        data = 1 / (1 + np.exp(-t.data))
+    except RuntimeWarning:
+        print(t.data)
     requires_grad = t.requires_grad
     if requires_grad:
         def grad_fn(grad:np.ndarray) -> np.ndarray:

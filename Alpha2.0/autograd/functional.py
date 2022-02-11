@@ -36,12 +36,17 @@ def softmax(t:Tensor) -> Tensor:
     data = np.exp(t.data) / (np.sum(np.exp(t.data)))
     raise NotImplementedError()
 
-def mse(output:Tensor, labels:Tensor) -> Tensor: 
-    return (output - labels) ** 2
+def mse(predicted:Tensor, actual:Tensor, is_one_hot = True) -> Tensor: 
+    if not is_one_hot:
+        actual = one_hot_encode(actual, 10)
+    errors = predicted - actual
+    loss = (errors * errors).sum()
+    return loss
+
 
 # also called cross entropy loss due to it's usage by statistical analysis (minxent)
 # https://gombru.github.io/assets/cross_entropy_loss/intro.png
-def minxent(X:Tensor, y:Tensor, is_one_hot = True) -> Tensor:
+def minxent(X:Tensor, y:Tensor, is_one_hot = True, dim=1) -> Tensor:
     r'''AKA Categorical Cross entropy loss by statastitians or negative log likelihood (NLL)
         Args:
             output (Tensor): the input tensor (preferably softmaxed)
@@ -51,9 +56,11 @@ def minxent(X:Tensor, y:Tensor, is_one_hot = True) -> Tensor:
     # labels.shape (batch_size, )
     #m = y.shape[0]
     assert y.requires_grad == False, 'y shouldn\'t have a grad'
-    # m = y.shape[0]
+    m = y.shape[0]
     if not is_one_hot:
         y = one_hot_encode(y, num_of_classes=X.data.shape[X.data.ndim - 1])
+    assert y.shape == (32,10), y.shape
+    assert X.shape == (32, 10), X.shape
     return -((log(X) * y).sum()) / Tensor(y.shape[0])
 
 
@@ -74,7 +81,9 @@ def one_hot_encode(t1:Tensor, num_of_classes:int = None, dtype:Optional[Union[fl
     
     a = t1.data.astype(int)
     if num_of_classes is None: num_of_classes = a.max() + 1
-    assert a.ndim == 1 or a.ndim == 0, f'only accepts 1 or 0 tensors, got {a.ndim} dim tensor'
+    assert num_of_classes == 10
+    a = a.squeeze()
+    assert a.ndim == 1 or a.ndim == 0, f'only accepts 1 or 0 tensors, got {a.ndim} dim tensor' + f' {a.shape}'
     data = np.zeros((a.size, num_of_classes))
     data[np.arange(a.size), a] = 1
     if squeeze: data = data.squeeze()

@@ -282,7 +282,9 @@ class Linear(Module):
         self.b = Parameter(self.out_features)
 
     def forward(self, x):
-        #self.w.shape == (in_features, out_features)
+        #self.w.shape == (batch_size*data or 'in_features', batch_size*out_features)
         #x.shape == (batch_size, in_fetures)
-        return x @ self.w + self.b
+        out = x @ self.w + self.b
+        #assert out.shape == (32, 10), out.shape
+        return out
 
