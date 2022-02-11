@@ -39,6 +39,10 @@ class Tensor:
     def data(self) -> np.ndarray:
         return self._data
 
+    @property
+    def size(self) -> int:
+        return self.data.size
+
     @data.setter
     def data(self, value):
         self._data = value
@@ -419,7 +423,6 @@ number = Union[float, int, np.float32, np.float64, np.intp]
 
 def _log(t:Tensor, base:Optional[number] = None):
     assert base is None, "non natural logorithims not implemented"
-    print(t)
     data = np.log(t.data)
     requires_grad = t.requires_grad
     if requires_grad:

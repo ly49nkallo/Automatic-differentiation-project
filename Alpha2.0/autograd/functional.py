@@ -2,6 +2,7 @@ from autograd.tensor import Tensor, Dependency, _log
 #import autograd
 #Tensor = autograd.tensor.Tensor
 import numpy as np
+from typing import Optional, Union
 
 def tanh(t:Tensor) -> Tensor:
     data = (np.exp(t.data) - np.exp(-t.data) / np.exp(t.data) + np.exp(-t.data))
@@ -36,7 +37,7 @@ def softmax(t:Tensor) -> Tensor:
     raise NotImplementedError()
 
 def mse(output:Tensor, labels:Tensor) -> Tensor: 
-    return ((labels - output) ** 2).sum() / Tensor(labels.size())
+    return (output - labels) ** 2
 
 # also called cross entropy loss due to it's usage by statistical analysis (minxent)
 # https://gombru.github.io/assets/cross_entropy_loss/intro.png
@@ -49,10 +50,11 @@ def minxent(X:Tensor, y:Tensor, is_one_hot = True) -> Tensor:
     # output.shape (batch_size, num_classes)
     # labels.shape (batch_size, )
     #m = y.shape[0]
-    m = y.shape[0]
+    assert y.requires_grad == False, 'y shouldn\'t have a grad'
+    # m = y.shape[0]
     if not is_one_hot:
-        y = one_hot_encode(y)
-    return -((log(X) * y).sum()) / Tensor(m)
+        y = one_hot_encode(y, num_of_classes=X.data.shape[X.data.ndim - 1])
+    return -((log(X) * y).sum()) / Tensor(y.shape[0])
 
 
 def binxent(output:Tensor, labels:Tensor) -> Tensor:
@@ -62,24 +64,18 @@ def binxent(output:Tensor, labels:Tensor) -> Tensor:
 def log(t1:Tensor) -> Tensor:
     return _log(t1)
 
-def one_hot_encode(t1:Tensor) -> Tensor:
+def one_hot_encode(t1:Tensor, num_of_classes:int = None, dtype:Optional[Union[float, int]] = int, squeeze:bool = True) -> Tensor:
     r''' A utility function that takes a tensor and returns a one hot encoding
             (note: this function should be used on non gradient tracking tensors only'''
 
     # t1.shape == (num_of_batches, batch_size,)
     # data.shape == (num_of_batches, batch_size, num_of_values)
     # @TODO clean up this code it is amazingly sloppy
-    has_multiple_batches = True
-    data = t1.data
-    if data.ndim == 1:
-        has_multiple_batches = False
-        data = np.expand_dims(data, 0)
-    assert data.ndim == 2
-    data = np.zeros(list(data.shape) + [t1.data.max() + 1])
-    assert data.ndim == 3, data.shape
-    data[np.arange(data.shape[0]), np.arange(data.shape[1]), t1.data] = 1
-    print(data.shape)
-    if not has_multiple_batches:
-        data = data.squeeze(axis = 0)
     
-    return Tensor(data)
+    a = t1.data.astype(int)
+    if num_of_classes is None: num_of_classes = a.max() + 1
+    assert a.ndim == 1 or a.ndim == 0, f'only accepts 1 or 0 tensors, got {a.ndim} dim tensor'
+    data = np.zeros((a.size, num_of_classes))
+    data[np.arange(a.size), a] = 1
+    if squeeze: data = data.squeeze()
+    return Tensor(data.astype(dtype))

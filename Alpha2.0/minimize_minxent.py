@@ -4,7 +4,7 @@ from autograd.tensor import Tensor
 from autograd.functional import minxent
 
 x = Tensor([1, 2, 3, 4, 3, 2, 1], requires_grad=True)
-y = Tensor([[1]])
+y = Tensor([1])
 print(x.shape)
 
 history = []
@@ -25,3 +25,4 @@ for i in range(1000):
 plt.plot(history, 'rs')
 plt.title('Minimise mixent function')
 plt.show()
+

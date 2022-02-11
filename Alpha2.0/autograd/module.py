@@ -278,9 +278,11 @@ class Linear(Module):
         self.in_features = in_features
         self.out_features = out_features
         assert isinstance(self.in_features, int) and isinstance(self.out_features, int), "features count must be an integer"
-        self.w = Parameter( self.in_features, self.out_features)
+        self.w = Parameter(self.in_features, self.out_features)
         self.b = Parameter(self.out_features)
 
     def forward(self, x):
+        #self.w.shape == (in_features, out_features)
+        #x.shape == (batch_size, in_fetures)
         return x @ self.w + self.b
 

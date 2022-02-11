@@ -38,7 +38,7 @@ if __name__ == '__main__':
     y_train = Tensor(labels)
 
     net = model(2, 1)
-    print(list(net.parameters()))
+    #print(list(net.parameters()))
     optimizer = SGD(net.parameters(), lr=0.01)
     batch_size = 32
     print(x_train.shape, y_train.shape)
