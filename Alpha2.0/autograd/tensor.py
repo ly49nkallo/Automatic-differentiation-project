@@ -142,14 +142,14 @@ class Tensor:
     def identity(self) -> 'Tensor':
         return _identity(self)
 
-    def softmax(self) -> 'Tensor':
-        return _softmax(self)
-
     def log(self) -> 'Tensor':
         return _log(self)
 
     def abs(self) -> 'Tensor':
         return _abs(self)
+
+    def transpose(self) -> 'Tensor':
+        return _transpose(self)
 
 '''TENSOR FUNCTIONS'''
 
@@ -419,9 +419,6 @@ def _exp(t:Tensor) -> Tensor:
         depends_on = []
     return Tensor(data, requires_grad, depends_on)
 
-def _softmax(t:Tensor) -> Tensor:
-    return _exp(t) / (_exp(t).sum())
-
 number = Union[float, int, np.float32, np.float64, np.intp]
 
 def _log(t:Tensor, base:Optional[number] = None):
@@ -446,3 +443,13 @@ def _abs(t:Tensor) -> Tensor:
 
     return Tensor(data, requires_grad, depends_on)
 
+#@TODO
+
+def _expand_dim(t:Tensor, dim:int):
+    raise NotImplementedError
+
+def _transpose(t:Tensor):
+    raise NotImplementedError
+
+def _view(t:Tensor):
+    raise NotImplementedError

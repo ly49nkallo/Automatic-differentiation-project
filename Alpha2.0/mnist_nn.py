@@ -7,7 +7,7 @@ from autograd.tensor import Tensor
 from autograd.optim import SGD
 from autograd.module import Module, Linear
 from autograd.activation import Sigmoid, Tanh, Softmax
-from autograd.functional import minxent, log, mse, one_hot_encode
+from autograd.functional import *
 
 def moving_average(a, n=3) :
     if not isinstance(a, np.ndarray): a = np.array(a)
@@ -47,17 +47,19 @@ def main():
     time.sleep(1)
     for batch_idx, (data, target) in enumerate(loader):
         data = Tensor(data.reshape((-1, 28*28)), requires_grad = True)
-        target = Tensor(target.reshape((-1, 1)))
+        target = Tensor(target.reshape((-1,)))
         #print(data.shape, target.shape)
         #print(batch_idx, data.shape, target)
         optimizer.zero_grad()
         output = model(data)
-        loss = mse(output, target, is_one_hot=False)
+        assert output.shape == (32, 10)
+        assert target.shape == (32,), target.shape
+        loss = minxent(output, target)
         history.append(loss.data.copy())
         loss.backward()
         optimizer.step()
         #print(batch_idx, 'loss', loss.data)
-        if batch_idx > (80000/32): 
+        if batch_idx > (50000/32): 
             print('ending stats')
             print(output.data.shape)
             print(one_hot_encode(target).data.shape)
