@@ -9,3 +9,12 @@ from autograd.module import Module, Linear
 from autograd.activation import Sigmoid, Tanh, Softmax
 from autograd.functional import *
 
+t1 = Tensor([[0,0,0,0],
+             [0,0,0,0]], requires_grad=True)
+t2 = Tensor([1, 1])
+
+t3 = nll(t1, t2)
+print(t3)
+t3.backward()
+print(t1.grad.data)
+

@@ -130,8 +130,8 @@ class Tensor:
     def exp(self) -> 'Tensor':
         return _exp(self)
 
-    def tansig(self) -> 'Tensor':
-        return _tansig(self)
+    def logsig(self) -> 'Tensor':
+        return _logsig(self)
 
     def tanh(self) -> 'Tensor':
         return _tanh(self)
@@ -364,7 +364,7 @@ def _slice(t: Tensor, idxs) -> Tensor:
 
     return Tensor(data, requires_grad, depends_on)
 
-def _tansig(t:Tensor) -> Tensor:
+def _logsig(t:Tensor) -> Tensor:
     try:
         data = 1 / (1 + np.exp(-t.data))
     except RuntimeWarning:

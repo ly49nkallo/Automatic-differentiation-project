@@ -67,6 +67,38 @@ def minxent(input:Tensor, target:Tensor, is_one_hot = False, dim=1) -> Tensor:
     input = softmax(input)
     return -(log(input) * truth).sum()
 
+def nll(input:Tensor, target:Tensor, dim=1) -> Tensor:
+    r'''Negative-log-likelihood loss function with softmax
+            Args:
+                input (Tensor): a direct output of the network without softmax
+                target (Tensor: a tensor containing labels
+                
+            Note: target shape's first dimention must be dimension num_classes'''
+    # https://deepnotes.io/softmax-crossentropy
+    # input.shape == (batch_size, num_classes)
+    # target.shape == (num_classes, 1)
+    m = target.shape[0]
+    p = stable_softmax(input.data)
+    #assert target.data.ndim == 2
+    log_likelihood = -np.log(p[range(m), target.data])
+    data = np.sum(log_likelihood) / m
+    requires_grad = input.requires_grad
+    if requires_grad:
+        def grad_fn(grad:np.ndarray) -> np.ndarray:
+            g = p.copy()
+            g[range(m), target.data] -= 1
+            g = g/m
+            return grad * g
+        depends_on = [Dependency(input, grad_fn)]
+    else:
+        depends_on = []
+    return Tensor(data, requires_grad, depends_on) 
+
+    
+def stable_softmax(X:np.ndarray):
+    exps = np.exp(X - np.max(X))
+    return (exps.T / np.expand_dims(np.sum(exps, axis=1), 1).T).T
+
 
 def binxent(output:Tensor, labels:Tensor) -> Tensor:
     r''' Binary Cross Entopy, takes binary labels'''

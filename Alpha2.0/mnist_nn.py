@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from datasets import load_dataset
+from tqdm import tqdm
 import time
 
 from autograd.tensor import Tensor
@@ -39,36 +40,40 @@ def main():
             100. * correct / len(data.data.copy())))
             
     history = []
-    loader = Dataloader('mnist', 32)
+    loader = Dataloader('mnist', 16)
     test_loader = Dataloader('mnist', 1000, train=False)
     model = Mlp(28*28, 10)
-    optimizer = SGD(model.parameters(), lr = 0.001)
+    optimizer = SGD(model.parameters(), lr = 0.01)
+    epochs = 1
     test()
     time.sleep(1)
-    for batch_idx, (data, target) in enumerate(loader):
-        data = Tensor(data.reshape((-1, 28*28)), requires_grad = True)
-        target = Tensor(target.reshape((-1,)))
-        #print(data.shape, target.shape)
-        #print(batch_idx, data.shape, target)
-        optimizer.zero_grad()
-        output = model(data)
-        assert output.shape == (32, 10)
-        assert target.shape == (32,), target.shape
-        loss = minxent(output, target)
-        history.append(loss.data.copy())
-        loss.backward()
-        optimizer.step()
-        #print(batch_idx, 'loss', loss.data)
-        if batch_idx > (50000/32): 
-            print('ending stats')
-            print(output.data.shape)
-            print(one_hot_encode(target).data.shape)
-            print('final output data:', output.data)
-            print('target data:', one_hot_encode(target).data)
-            break
-    test()
+    for i in range(epochs):
+        for batch_idx, (data, target) in (enumerate(tqdm(loader, desc=f"Epoch: {i + 1}", ascii=True, colour='green'))):
+            data = Tensor(data.reshape((-1, 28*28)), requires_grad = True)
+            target = Tensor(target.reshape((-1,)))
+            #print(data.shape, target.shape)
+            #print(batch_idx, data.shape, target)
+            optimizer.zero_grad()
+            output = model(data)
+            #assert output.shape == (16, 10), output.shape
+            #assert target.shape == (16,), target.shape
+            loss = nll(output, target)
+            history.append(loss.data.copy())
+            loss.backward()
+            optimizer.step()
+            #print(batch_idx, 'loss', loss.data)
+            if batch_idx >= (60000//16): 
+                print('ending stats')
+                print(output.data.shape)
+                print(target.data.shape)
+                print('final output data:', output.data)
+                print('target data:', target.data)
+                break
+        print('Epoch', i+1)
+        test()
    # plt.plot(history)
     plt.plot(moving_average(history[10:], n=10))
+    plt.plot(moving_average(history[10:], n=100))
     plt.show()
 '''Author: Ty Brennan'''
 
@@ -94,13 +99,14 @@ class Dataloader:
             batch = self.pairs[self.index:self.index+self.batch_size]
             self.index += self.batch_size
             # we want to return a tuple of two npArrays of shape 32x28x28 and 32x1
-            if self.dataset == 'MNIST':
-                # getdata() has been depreciated
-                return np.array([np.array(b) / 255 for b in batch['image']]).reshape(-1, 28, 28), np.array(batch['label'])
-            else:
-                raise NameError(f'There is no database called {self.dataset}')
+            # getdata() has been depreciated
+            return np.array([np.array(b) / 255 for b in batch['image']]).reshape(-1, 28, 28), np.array(batch['label'])
         else:
             raise StopIteration
+
+    def __len__(self):
+        return len(self.pairs) // self.batch_size
+    
 
 class Mlp(Module):
     def __init__(self, in_features, out_features):
@@ -115,7 +121,7 @@ class Mlp(Module):
     def forward(self, x):
         x = self.linear(x)
         x = self.act(x)
-       #x = self.linear2(x)
+        #x = self.linear2(x)
         #x = self.act2(x)
         x = self.linear3(x)
         #x = self.act2(x)
