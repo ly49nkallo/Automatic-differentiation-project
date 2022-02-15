@@ -36,8 +36,8 @@ def main():
             100. * correct / len(data.data.copy())))
             
     history = []
-    loader = Dataloader('mnist', 16)
-    test_loader = Dataloader('mnist', 1000, train=False)
+    loader = Dataloader('mnist', 16, shuffle=True)
+    test_loader = Dataloader('mnist', 1000, train=False, shuffle=True)
     model = Mlp(28*28, 10)
     optimizer = SGD(model.parameters(), lr = 0.01)
     epochs = 3
@@ -46,8 +46,7 @@ def main():
         for batch_idx, (data, target) in (enumerate(tqdm(loader, desc=f"Epoch: {i + 1}", ascii=True, colour='green'))):
             data = Tensor(data.reshape((-1, 28*28)), requires_grad = True)
             target = Tensor(target.reshape((-1,)))
-            #print(data.shape, target.shape)
-            #print(batch_idx, data.shape, target)
+
             optimizer.zero_grad()
             output = model(data)
             #assert output.shape == (16, 10), output.shape
@@ -88,15 +87,15 @@ class Dataloader:
             else:
                 self.dset = load_dataset('mnist', split='test')
             self.data = self.dset['image']
-            self.labels = self.dset['label']
+            self.label = self.dset['label']
             del self.dset
-            self.pairs = list(zip(self.data, self.labels))
+            self.pairs = list(zip(self.data, self.label))
             if shuffle:
                 np.random.seed(69420)
                 np.random.shuffle(self.pairs)
-            self.data, self.labels = zip(*self.pairs)
-            self.data = np.array(np.array(self.data).reshape(-1, 28, 28) // 255)
-            self.labels = np.array(self.labels).reshape(-1)
+            self.data, self.label = zip(*self.pairs)
+            self.data = np.array(list(map(lambda img: np.array(img) / 255, self.data))).reshape(-1, 28, 28)
+            self.label = np.array(self.label).reshape(-1)
         
         
     def __iter__(self):
@@ -110,9 +109,7 @@ class Dataloader:
             self.index += self.batch_size
             # we want to return a tuple of two npArrays of shape 32x28x28 and 32x1
             # getdata() has been depreciated
-            assert batch_data.shape == (16, 28, 28), batch_data.shape
-            assert batch_label.shape[0] == 16, batch_label.shape
-            return batch_data // 255, batch_label
+            return batch_data, batch_label
         else:
             raise StopIteration
 
