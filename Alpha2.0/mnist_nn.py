@@ -39,8 +39,8 @@ def main():
     loader = Dataloader('mnist', 16, shuffle=True)
     test_loader = Dataloader('mnist', 1000, train=False, shuffle=True)
     model = Mlp(28*28, 10)
-    optimizer = SGD(model.parameters(), lr = 0.01)
-    epochs = 3
+    optimizer = SGD(model.parameters(), lr = 0.007)
+    epochs = 7
     test()
     for i in range(epochs):
         for batch_idx, (data, target) in (enumerate(tqdm(loader, desc=f"Epoch: {i + 1}", ascii=True, colour='green'))):
