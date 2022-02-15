@@ -25,15 +25,11 @@ def main():
         #data = data.view(-1,28*28)
             data = Tensor(data.reshape((-1, 28*28)), requires_grad = False)
             target = Tensor(target.reshape((-1, 1)))
-            print('test', data.shape, target.shape)
             output = model(data)
             test_loss += mse(output, target).data
-            print(output.shape, target.shape)
             pred = np.argmax(output.data.copy(), axis=1)
-            print(pred.shape, target.shape)
             correct = sum([1 if p == t.data else 0 for p, t in zip(pred, target)])
 
-            break
         test_loss /= len(test_loader.dataset)
         print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
             test_loss, correct, len(data.data.copy()),
@@ -44,9 +40,8 @@ def main():
     test_loader = Dataloader('mnist', 1000, train=False)
     model = Mlp(28*28, 10)
     optimizer = SGD(model.parameters(), lr = 0.01)
-    epochs = 1
+    epochs = 3
     test()
-    time.sleep(1)
     for i in range(epochs):
         for batch_idx, (data, target) in (enumerate(tqdm(loader, desc=f"Epoch: {i + 1}", ascii=True, colour='green'))):
             data = Tensor(data.reshape((-1, 28*28)), requires_grad = True)
@@ -79,28 +74,45 @@ def main():
 
 class Dataloader:
     '''A class that allows us to get batches of data from huggingface datsets'''
-    def __init__(self, dataset:str,batch_size, transforms:list=list(), train=True):
+    def __init__(self, dataset:str,batch_size, 
+                transforms:list=list(), 
+                train=True,
+                shuffle=False):
         self.dataset = dataset.upper()
         self.batch_size = batch_size
         self.train = train
         assert isinstance(self.dataset, str)
         if self.dataset == 'MNIST':
             if train:
-                self.pairs = load_dataset('mnist', split='train')
+                self.dset = load_dataset('mnist', split='train')
             else:
-                self.pairs = load_dataset('mnist', split='test')
-
+                self.dset = load_dataset('mnist', split='test')
+            self.data = self.dset['image']
+            self.labels = self.dset['label']
+            del self.dset
+            self.pairs = list(zip(self.data, self.labels))
+            if shuffle:
+                np.random.seed(69420)
+                np.random.shuffle(self.pairs)
+            self.data, self.labels = zip(*self.pairs)
+            self.data = np.array(np.array(self.data).reshape(-1, 28, 28) // 255)
+            self.labels = np.array(self.labels).reshape(-1)
+        
+        
     def __iter__(self):
         self.index = 0
         return self
 
     def __next__(self):
-        if self.index < len(self.pairs):
-            batch = self.pairs[self.index:self.index+self.batch_size]
+        if self.index < len(self.pairs) - 1:
+            batch_data = self.data[self.index:self.index+self.batch_size]
+            batch_label = self.label[self.index:self.index+self.batch_size]
             self.index += self.batch_size
             # we want to return a tuple of two npArrays of shape 32x28x28 and 32x1
             # getdata() has been depreciated
-            return np.array([np.array(b) / 255 for b in batch['image']]).reshape(-1, 28, 28), np.array(batch['label'])
+            assert batch_data.shape == (16, 28, 28), batch_data.shape
+            assert batch_label.shape[0] == 16, batch_label.shape
+            return batch_data // 255, batch_label
         else:
             raise StopIteration
 
@@ -112,17 +124,17 @@ class Mlp(Module):
     def __init__(self, in_features, out_features):
         super().__init__()
         self.linear = Linear(in_features, 128)
-        #self.linear2 = Linear(128, 128)
-        self.linear3 = Linear(128, out_features)
+        self.linear2 = Linear(128, 64)
+        self.linear3 = Linear(64, out_features)
         self.act = Sigmoid()
-        #self.act2 = Sigmoid()
+        self.act2 = Sigmoid()
         self.softmax = Softmax()
 
     def forward(self, x):
         x = self.linear(x)
         x = self.act(x)
-        #x = self.linear2(x)
-        #x = self.act2(x)
+        x = self.linear2(x)
+        x = self.act2(x)
         x = self.linear3(x)
         #x = self.act2(x)
         #x = self.softmax(x)
