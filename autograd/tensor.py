@@ -398,7 +398,7 @@ def _relu(t:Tensor) -> Tensor:
     if requires_grad:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             # the derivative of relu is 0 if x<0 and 1 if x>0
-            return np.maximum(grad, np.zeros_like(grad))
+            return grad * (t.data > 0)
         depends_on = [Dependency(t, grad_fn)]
     else:
         depends_on = []

@@ -1,3 +1,6 @@
+'''Author: Ty Brennan'''
+'''Auto-differentiation Framework for Machine Learning in Python/Numpy'''
+
 from autograd.module import Module,  Linear
 from autograd.activation import ReLU, Tanh, Sigmoid, Softmax
 from autograd.parameter import Parameter
