@@ -169,21 +169,6 @@ class Module:
         for elem in gen:
             yield elem
 
-    def parameters(self, recurse: bool = True) -> Iterator[Parameter]:
-        r"""Returns an iterator over module parameters.
-
-        This is typically passed to an optimizer.
-
-        Args:
-            recurse (bool): if True, then yields parameters of this module
-                and all submodules. Otherwise, yields only parameters that
-                are direct members of this module.
-
-        Yields:
-            Parameter: module parameter
-        """
-        for name, param in self.named_parameters(recurse=recurse):
-            yield param
 
     def _named_members(self, get_members_fn, prefix='', recurse=True):
         r"""Helper method for yielding various names + members of modules."""

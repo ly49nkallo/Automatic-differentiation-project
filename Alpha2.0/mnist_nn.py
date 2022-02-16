@@ -5,7 +5,7 @@ from tqdm import tqdm
 import time
 
 from autograd.tensor import Tensor
-from autograd.optim import SGD
+from autograd.optim import SGD, Momentum
 from autograd.module import Module, Linear
 from autograd.activation import Sigmoid, Tanh, Softmax
 from autograd.functional import *
@@ -39,8 +39,8 @@ def main():
     loader = Dataloader('mnist', 16, shuffle=True)
     test_loader = Dataloader('mnist', 1000, train=False, shuffle=True)
     model = Mlp(28*28, 10)
-    optimizer = SGD(model.parameters(), lr = 0.007)
-    epochs = 7
+    optimizer = Momentum(model.parameters(), lr = 0.007)
+    epochs = 10
     test()
     for i in range(epochs):
         for batch_idx, (data, target) in (enumerate(tqdm(loader, desc=f"Epoch: {i + 1}", ascii=True, colour='green'))):
@@ -63,7 +63,6 @@ def main():
                 print('final output data:', output.data)
                 print('target data:', target.data)
                 break
-        print('Epoch', i+1)
         test()
    # plt.plot(history)
     plt.plot(moving_average(history[10:], n=10))

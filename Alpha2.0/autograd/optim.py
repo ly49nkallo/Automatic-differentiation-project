@@ -40,15 +40,15 @@ class SGD(Optimizer_base):
             parameter -= parameter.grad * self.lr
 
 class Momentum(Optimizer_base):
-    def __init__(self, params:Iterator[Parameter], lr: float = 0.01) -> None:
+    def __init__(self, params:Iterator[Parameter], lr: float = 0.01, gamma:float = 0.9) -> None:
         super().__init__(params)
         self.lr = lr
-        self.v_old = 0
+        self.gamma = gamma
         #must let each parameter store it's own v values
 
     def step(self) -> None:
-        gamma = 0.9
         for parameter in self.parameters:
-            v = parameter.grad * self.lr - gamma * self.v_old
+            v = parameter.grad * self.lr - self.gamma * parameter.v
+            assert isinstance(v, Tensor)
             parameter -= v
-            self.v_old = v
+            parameter.v = v
