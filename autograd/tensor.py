@@ -17,7 +17,7 @@ def ensure_tensor(tensorable:Tensorable) -> 'Tensor':
     else:
         return Tensor(tensorable)
 
-class Dependency(NamedTuple):
+class Node(NamedTuple):
     tensor: 'Tensor'
     grad_fn: Callable[[np.ndarray], np.ndarray]
 
@@ -25,7 +25,7 @@ class Tensor:
     def __init__(self,
                 data:Array_like,
                 requires_grad:bool = False,
-                depends_on:List[Dependency] = None,) -> None:
+                depends_on:List[Node] = None,) -> None:
         self.data = ensure_array(data)
         self.requires_grad = requires_grad
         self.depends_on = depends_on or []
@@ -171,7 +171,7 @@ def _tensor_sum(t: Tensor, axis:Optional[int] = None, keep_dims:bool = False) ->
                 shape = t.shape[:axis]+t.shape[axis+1:]
                 print('shape', shape)
                 return grad * np.ones(shape)
-        depends_on = [Dependency(t, grad_fn)]
+        depends_on = [Node(t, grad_fn)]
     else:
         depends_on = []
     
@@ -184,7 +184,7 @@ def _add(t1: Tensor, t2: Tensor) -> Tensor:
     data = t1.data + t2.data
     # if either component requires gradient computation, the sum must require it too
     requires_grad = t1.requires_grad or t2.requires_grad
-    depends_on:List[Dependency] = []
+    depends_on:List[Node] = []
 
     if t1.requires_grad:
         def grad_fn1(grad: np.ndarray) -> np.ndarray:
@@ -200,7 +200,7 @@ def _add(t1: Tensor, t2: Tensor) -> Tensor:
             
             return grad
 
-        depends_on.append(Dependency(t1, grad_fn1))
+        depends_on.append(Node(t1, grad_fn1))
 
     if t2.requires_grad:
         def grad_fn2(grad: np.ndarray) -> np.ndarray:
@@ -216,7 +216,7 @@ def _add(t1: Tensor, t2: Tensor) -> Tensor:
             
             return grad
 
-        depends_on.append(Dependency(t2, grad_fn2))
+        depends_on.append(Node(t2, grad_fn2))
 
     return Tensor(data, requires_grad, depends_on)
 
@@ -226,7 +226,7 @@ def _multiply(t1:Tensor, t2:Tensor) -> Tensor:
     # Dyf(x,y) = cy
     data = t1.data * t2.data
     requires_grad = t1.requires_grad or t2.requires_grad
-    depends_on: List[Dependency] = []
+    depends_on: List[Node] = []
 
     if t1.requires_grad:
         def grad_fn1(grad: np.ndarray) -> np.ndarray:
@@ -241,7 +241,7 @@ def _multiply(t1:Tensor, t2:Tensor) -> Tensor:
 
             return grad
         
-        depends_on.append(Dependency(t1, grad_fn1))
+        depends_on.append(Node(t1, grad_fn1))
 
     if t2.requires_grad:
         def grad_fn2(grad: np.ndarray) -> np.ndarray:
@@ -256,7 +256,7 @@ def _multiply(t1:Tensor, t2:Tensor) -> Tensor:
 
             return grad
         
-        depends_on.append(Dependency(t2, grad_fn2))
+        depends_on.append(Node(t2, grad_fn2))
 
     return Tensor(data, requires_grad, depends_on)
 
@@ -266,7 +266,7 @@ def _neg(t: Tensor) -> Tensor:
     if t.requires_grad:
         def grad_fn(grad: np.ndarray) -> np.ndarray:
             return -grad
-        depends_on = [Dependency(t, grad_fn)]
+        depends_on = [Node(t, grad_fn)]
     else:
         depends_on = []
     return Tensor(data, requires_grad, depends_on)
@@ -287,18 +287,18 @@ def _matmul(t1: Tensor, t2: Tensor) -> Tensor:
     data = t1.data @ t2.data
     requires_grad = t1.requires_grad or t2.requires_grad
 
-    depends_on: List[Dependency] = []
+    depends_on: List[Node] = []
 
     if t1.requires_grad:
         def grad_fn1(grad: np.ndarray) -> np.ndarray:
             return grad @ t2.data.T
 
-        depends_on.append(Dependency(t1, grad_fn1))
+        depends_on.append(Node(t1, grad_fn1))
 
     if t2.requires_grad:
         def grad_fn2(grad: np.ndarray) -> np.ndarray:
             return t1.data.T @ grad
-        depends_on.append(Dependency(t2, grad_fn2))
+        depends_on.append(Node(t2, grad_fn2))
 
     return Tensor(data,
                   requires_grad,
@@ -313,7 +313,7 @@ def _truediv(t1:Tensor, t2:Tensor) -> Tensor:
 
     data = t1.data / t2.data
     requires_grad = t1.requires_grad or t2.requires_grad
-    depends_on: List[Dependency] = []
+    depends_on: List[Node] = []
 
     if t1.requires_grad:
         def grad_fn1(grad: np.ndarray) -> np.ndarray:
@@ -329,7 +329,7 @@ def _truediv(t1:Tensor, t2:Tensor) -> Tensor:
 
             return grad
         
-        depends_on.append(Dependency(t1, grad_fn1))
+        depends_on.append(Node(t1, grad_fn1))
 
     if t2.requires_grad:
         def grad_fn2(grad: np.ndarray) -> np.ndarray:
@@ -344,7 +344,7 @@ def _truediv(t1:Tensor, t2:Tensor) -> Tensor:
 
             return grad
         
-        depends_on.append(Dependency(t2, grad_fn2))
+        depends_on.append(Node(t2, grad_fn2))
 
     return Tensor(data, requires_grad, depends_on)
 
@@ -358,7 +358,7 @@ def _slice(t: Tensor, idxs) -> Tensor:
             bigger_grad[idxs] = grad
             return bigger_grad
 
-        depends_on = Dependency(t, grad_fn)
+        depends_on = Node(t, grad_fn)
     else:
         depends_on = []
 
@@ -374,7 +374,7 @@ def _logsig(t:Tensor) -> Tensor:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             return grad * (data * (1 - data))
         
-        depends_on = [Dependency(t, grad_fn)]
+        depends_on = [Node(t, grad_fn)]
     else:
         depends_on = []
 
@@ -386,7 +386,7 @@ def _tanh(t:Tensor) -> Tensor:
     if requires_grad:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             return grad * (1- (data * data))
-        depends_on = [Dependency(t, grad_fn)]
+        depends_on = [Node(t, grad_fn)]
     else:
         depends_on = []
     
@@ -399,14 +399,14 @@ def _relu(t:Tensor) -> Tensor:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             # the derivative of relu is 0 if x<0 and 1 if x>0
             return grad * (t.data > 0)
-        depends_on = [Dependency(t, grad_fn)]
+        depends_on = [Node(t, grad_fn)]
     else:
         depends_on = []
 
     return Tensor(data, requires_grad, depends_on)
 
 def _identity(t:Tensor) -> Tensor:
-    return Tensor(t.data, t.requires_grad, [Dependency(t, lambda x: x)])
+    return Tensor(t.data, t.requires_grad, [Node(t, lambda x: x)])
 
 def _exp(t:Tensor) -> Tensor:
     # d(e**x)/dx = 
@@ -414,7 +414,7 @@ def _exp(t:Tensor) -> Tensor:
     requires_grad = t.requires_grad
     if requires_grad:
         # the derivative of the natural exponential function is itself
-        depends_on = [Dependency(t, lambda grad: grad * data)]
+        depends_on = [Node(t, lambda grad: grad * data)]
     else:
         depends_on = []
     return Tensor(data, requires_grad, depends_on)
@@ -426,7 +426,7 @@ def _log(t:Tensor, base:Optional[number] = None):
     data = np.log(t.data)
     requires_grad = t.requires_grad
     if requires_grad:
-        depends_on = [Dependency(t, lambda grad: grad / t.data)]
+        depends_on = [Node(t, lambda grad: grad / t.data)]
     else:
         depends_on = []
 
@@ -436,7 +436,7 @@ def _abs(t:Tensor) -> Tensor:
     data = np.abs(t.data)
     requires_grad = t.requires_grad
     if requires_grad:
-        depends_on = [Dependency(t, 
+        depends_on = [Node(t, 
                                 lambda grad : grad * np.vectorize(lambda x: 2. * int(x >= 0) - 1.) (t.data))]
     else:
         depends_on = []

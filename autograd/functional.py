@@ -1,4 +1,4 @@
-from autograd.tensor import Tensor, Dependency, _log
+from autograd.tensor import Tensor, Node, _log
 #import autograd
 #Tensor = autograd.tensor.Tensor
 import numpy as np
@@ -10,7 +10,7 @@ def tanh(t:Tensor) -> Tensor:
     if requires_grad:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             return grad * (1- (data * data))
-        depends_on = [Dependency(t, grad_fn)]
+        depends_on = [Node(t, grad_fn)]
     else:
         depends_on = []
     
@@ -23,14 +23,14 @@ def relu(t:Tensor) -> Tensor:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             # the derivative of relu is 0 if x<0 and 1 if x>0
             return np.maximum(grad, np.zeros_like(grad))
-        depends_on = [Dependency(t, grad_fn)]
+        depends_on = [Node(t, grad_fn)]
     else:
         depends_on = []
 
     return Tensor(data, requires_grad, depends_on)
 
 def identity(t:Tensor) -> Tensor:
-    return Tensor(t.data, t.requires_grad, [Dependency(t, lambda x: x)])
+    return Tensor(t.data, t.requires_grad, [Node(t, lambda x: x)])
 
 def exp(t:Tensor) -> Tensor:
     return t.exp()
@@ -89,7 +89,7 @@ def nll(input:Tensor, target:Tensor, dim=1) -> Tensor:
             g[range(m), target.data] -= 1
             g = g/m
             return grad * g
-        depends_on = [Dependency(input, grad_fn)]
+        depends_on = [Node(input, grad_fn)]
     else:
         depends_on = []
     return Tensor(data, requires_grad, depends_on) 
