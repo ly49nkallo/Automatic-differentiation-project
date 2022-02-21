@@ -57,7 +57,7 @@ def main():
     loader = Dataloader('mnist', 16, shuffle=True)
     test_loader = Dataloader('mnist', 1000, train=False, shuffle=True)
     model = Mlp(28*28, 10)
-    optimizer = Momentum(model.parameters(), lr = 0.01)
+    optimizer = SGD(model.parameters(), lr = 0.01)
     epochs = 10
     test()
     for i in range(epochs):
