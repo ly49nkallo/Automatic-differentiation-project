@@ -57,12 +57,12 @@ def main():
     loader = Dataloader('mnist', 16, shuffle=True)
     test_loader = Dataloader('mnist', 1000, train=False, shuffle=True)
     model = Mlp(28*28, 10)
-    optimizer = SGD(model.parameters(), lr = 0.01)
+    optimizer = Momentum(model.parameters(), lr = 0.01)
     epochs = 5
     test()
     for i in range(epochs):
         for batch_idx, (data, target) in (enumerate(tqdm(loader, desc=f"Epoch: {i + 1}", 
-                                                    ascii=True, colour='green', unit='B'))):
+                                                    ascii=True, colour='green'))):
             data = Tensor(data.reshape((-1, 28*28)), requires_grad = True)
             target = Tensor(target.reshape((-1,)))
 
@@ -77,6 +77,9 @@ def main():
    # plt.plot(history)
     plt.plot(moving_average(history[10:], n=10))
     plt.plot(moving_average(history[10:], n=100))
+    plt.legend(('n=10', 'n=100'), title='Moving average')
+    plt.axes()
+    plt.title("Average batch loss")
     plt.show()
 
 if __name__ == '__main__':

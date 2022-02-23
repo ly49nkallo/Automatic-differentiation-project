@@ -10,11 +10,11 @@ def tanh(t:Tensor) -> Tensor:
     if requires_grad:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             return grad * (1- (data * data))
-        depends_on = [Node(t, grad_fn)]
+        parent_nodes = [Node(t, grad_fn)]
     else:
-        depends_on = []
+        parent_nodes = []
     
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
 
 def relu(t:Tensor) -> Tensor:
     data = np.maximum(t.data, np.zeros_like(t.data))
@@ -23,11 +23,11 @@ def relu(t:Tensor) -> Tensor:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             # the derivative of relu is 0 if x<0 and 1 if x>0
             return np.maximum(grad, np.zeros_like(grad))
-        depends_on = [Node(t, grad_fn)]
+        parent_nodes = [Node(t, grad_fn)]
     else:
-        depends_on = []
+        parent_nodes = []
 
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
 
 def identity(t:Tensor) -> Tensor:
     return Tensor(t.data, t.requires_grad, [Node(t, lambda x: x)])
@@ -89,10 +89,10 @@ def nll(input:Tensor, target:Tensor, dim=1) -> Tensor:
             g[range(m), target.data] -= 1
             g = g/m
             return grad * g
-        depends_on = [Node(input, grad_fn)]
+        parent_nodes = [Node(input, grad_fn)]
     else:
-        depends_on = []
-    return Tensor(data, requires_grad, depends_on) 
+        parent_nodes = []
+    return Tensor(data, requires_grad, parent_nodes) 
 
     
 def stable_softmax(X:np.ndarray):

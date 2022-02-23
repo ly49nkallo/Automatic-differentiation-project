@@ -25,10 +25,10 @@ class Tensor:
     def __init__(self,
                 data:Array_like,
                 requires_grad:bool = False,
-                depends_on:List[Node] = None,) -> None:
+                parent_nodes:List[Node] = None,) -> None:
         self.data = ensure_array(data)
         self.requires_grad = requires_grad
-        self.depends_on = depends_on or []
+        self.parent_nodes = parent_nodes or []
         self.shape = self.data.shape
         self.grad:Optional['Tensor'] = None
 
@@ -120,9 +120,11 @@ class Tensor:
         
         self.grad.data = self.grad.data + grad.data #type: ignore
     
-        for dependency in self.depends_on:
-            backward_grad = dependency.grad_fn(grad.data)
-            dependency.tensor.backward(Tensor(backward_grad))
+        for parent in self.parent_nodes:
+            backward_grad = parent.grad_fn(grad.data)
+            parent.tensor.backward(Tensor(backward_grad))
+
+    '''Tensor operations'''
 
     def sum(self, axis:Optional[int] = None) -> 'Tensor':
         return _tensor_sum(self, axis=axis)
@@ -171,11 +173,11 @@ def _tensor_sum(t: Tensor, axis:Optional[int] = None, keep_dims:bool = False) ->
                 shape = t.shape[:axis]+t.shape[axis+1:]
                 print('shape', shape)
                 return grad * np.ones(shape)
-        depends_on = [Node(t, grad_fn)]
+        parent_nodes = [Node(t, grad_fn)]
     else:
-        depends_on = []
+        parent_nodes = []
     
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
     
 
 def _add(t1: Tensor, t2: Tensor) -> Tensor:
@@ -184,7 +186,7 @@ def _add(t1: Tensor, t2: Tensor) -> Tensor:
     data = t1.data + t2.data
     # if either component requires gradient computation, the sum must require it too
     requires_grad = t1.requires_grad or t2.requires_grad
-    depends_on:List[Node] = []
+    parent_nodes:List[Node] = []
 
     if t1.requires_grad:
         def grad_fn1(grad: np.ndarray) -> np.ndarray:
@@ -200,7 +202,7 @@ def _add(t1: Tensor, t2: Tensor) -> Tensor:
             
             return grad
 
-        depends_on.append(Node(t1, grad_fn1))
+        parent_nodes.append(Node(t1, grad_fn1))
 
     if t2.requires_grad:
         def grad_fn2(grad: np.ndarray) -> np.ndarray:
@@ -216,9 +218,9 @@ def _add(t1: Tensor, t2: Tensor) -> Tensor:
             
             return grad
 
-        depends_on.append(Node(t2, grad_fn2))
+        parent_nodes.append(Node(t2, grad_fn2))
 
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
 
 def _multiply(t1:Tensor, t2:Tensor) -> Tensor:
     # f(x,y) = xy
@@ -226,7 +228,7 @@ def _multiply(t1:Tensor, t2:Tensor) -> Tensor:
     # Dyf(x,y) = cy
     data = t1.data * t2.data
     requires_grad = t1.requires_grad or t2.requires_grad
-    depends_on: List[Node] = []
+    parent_nodes: List[Node] = []
 
     if t1.requires_grad:
         def grad_fn1(grad: np.ndarray) -> np.ndarray:
@@ -241,7 +243,7 @@ def _multiply(t1:Tensor, t2:Tensor) -> Tensor:
 
             return grad
         
-        depends_on.append(Node(t1, grad_fn1))
+        parent_nodes.append(Node(t1, grad_fn1))
 
     if t2.requires_grad:
         def grad_fn2(grad: np.ndarray) -> np.ndarray:
@@ -256,9 +258,9 @@ def _multiply(t1:Tensor, t2:Tensor) -> Tensor:
 
             return grad
         
-        depends_on.append(Node(t2, grad_fn2))
+        parent_nodes.append(Node(t2, grad_fn2))
 
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
 
 def _neg(t: Tensor) -> Tensor:
     data = -t.data
@@ -266,10 +268,10 @@ def _neg(t: Tensor) -> Tensor:
     if t.requires_grad:
         def grad_fn(grad: np.ndarray) -> np.ndarray:
             return -grad
-        depends_on = [Node(t, grad_fn)]
+        parent_nodes = [Node(t, grad_fn)]
     else:
-        depends_on = []
-    return Tensor(data, requires_grad, depends_on)
+        parent_nodes = []
+    return Tensor(data, requires_grad, parent_nodes)
 
 def _sub(t1: Tensor, t2:Tensor) -> Tensor:
     return t1 + -t2
@@ -287,22 +289,22 @@ def _matmul(t1: Tensor, t2: Tensor) -> Tensor:
     data = t1.data @ t2.data
     requires_grad = t1.requires_grad or t2.requires_grad
 
-    depends_on: List[Node] = []
+    parent_nodes: List[Node] = []
 
     if t1.requires_grad:
         def grad_fn1(grad: np.ndarray) -> np.ndarray:
             return grad @ t2.data.T
 
-        depends_on.append(Node(t1, grad_fn1))
+        parent_nodes.append(Node(t1, grad_fn1))
 
     if t2.requires_grad:
         def grad_fn2(grad: np.ndarray) -> np.ndarray:
             return t1.data.T @ grad
-        depends_on.append(Node(t2, grad_fn2))
+        parent_nodes.append(Node(t2, grad_fn2))
 
     return Tensor(data,
                   requires_grad,
-                  depends_on)
+                  parent_nodes)
 
 def _truediv(t1:Tensor, t2:Tensor) -> Tensor:
     # f(x,y) = x/y
@@ -313,7 +315,7 @@ def _truediv(t1:Tensor, t2:Tensor) -> Tensor:
 
     data = t1.data / t2.data
     requires_grad = t1.requires_grad or t2.requires_grad
-    depends_on: List[Node] = []
+    parent_nodes: List[Node] = []
 
     if t1.requires_grad:
         def grad_fn1(grad: np.ndarray) -> np.ndarray:
@@ -329,7 +331,7 @@ def _truediv(t1:Tensor, t2:Tensor) -> Tensor:
 
             return grad
         
-        depends_on.append(Node(t1, grad_fn1))
+        parent_nodes.append(Node(t1, grad_fn1))
 
     if t2.requires_grad:
         def grad_fn2(grad: np.ndarray) -> np.ndarray:
@@ -344,9 +346,9 @@ def _truediv(t1:Tensor, t2:Tensor) -> Tensor:
 
             return grad
         
-        depends_on.append(Node(t2, grad_fn2))
+        parent_nodes.append(Node(t2, grad_fn2))
 
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
 
 def _slice(t: Tensor, idxs) -> Tensor:
     data = t.data[idxs]
@@ -358,11 +360,11 @@ def _slice(t: Tensor, idxs) -> Tensor:
             bigger_grad[idxs] = grad
             return bigger_grad
 
-        depends_on = Node(t, grad_fn)
+        parent_nodes = Node(t, grad_fn)
     else:
-        depends_on = []
+        parent_nodes = []
 
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
 
 def _logsig(t:Tensor) -> Tensor:
     try:
@@ -374,11 +376,11 @@ def _logsig(t:Tensor) -> Tensor:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             return grad * (data * (1 - data))
         
-        depends_on = [Node(t, grad_fn)]
+        parent_nodes = [Node(t, grad_fn)]
     else:
-        depends_on = []
+        parent_nodes = []
 
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
 
 def _tanh(t:Tensor) -> Tensor:
     data = (np.exp(t.data) - np.exp(-t.data) / np.exp(t.data) + np.exp(-t.data))
@@ -386,11 +388,11 @@ def _tanh(t:Tensor) -> Tensor:
     if requires_grad:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             return grad * (1- (data * data))
-        depends_on = [Node(t, grad_fn)]
+        parent_nodes = [Node(t, grad_fn)]
     else:
-        depends_on = []
+        parent_nodes = []
     
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
 
 def _relu(t:Tensor) -> Tensor:
     data = np.maximum(t.data, np.zeros_like(t.data))
@@ -399,11 +401,11 @@ def _relu(t:Tensor) -> Tensor:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             # the derivative of relu is 0 if x<0 and 1 if x>0
             return grad * (t.data > 0)
-        depends_on = [Node(t, grad_fn)]
+        parent_nodes = [Node(t, grad_fn)]
     else:
-        depends_on = []
+        parent_nodes = []
 
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
 
 def _identity(t:Tensor) -> Tensor:
     return Tensor(t.data, t.requires_grad, [Node(t, lambda x: x)])
@@ -414,10 +416,10 @@ def _exp(t:Tensor) -> Tensor:
     requires_grad = t.requires_grad
     if requires_grad:
         # the derivative of the natural exponential function is itself
-        depends_on = [Node(t, lambda grad: grad * data)]
+        parent_nodes = [Node(t, lambda grad: grad * data)]
     else:
-        depends_on = []
-    return Tensor(data, requires_grad, depends_on)
+        parent_nodes = []
+    return Tensor(data, requires_grad, parent_nodes)
 
 number = Union[float, int, np.float32, np.float64, np.intp]
 
@@ -426,22 +428,22 @@ def _log(t:Tensor, base:Optional[number] = None):
     data = np.log(t.data)
     requires_grad = t.requires_grad
     if requires_grad:
-        depends_on = [Node(t, lambda grad: grad / t.data)]
+        parent_nodes = [Node(t, lambda grad: grad / t.data)]
     else:
-        depends_on = []
+        parent_nodes = []
 
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
 
 def _abs(t:Tensor) -> Tensor:
     data = np.abs(t.data)
     requires_grad = t.requires_grad
     if requires_grad:
-        depends_on = [Node(t, 
+        parent_nodes = [Node(t, 
                                 lambda grad : grad * np.vectorize(lambda x: 2. * int(x >= 0) - 1.) (t.data))]
     else:
-        depends_on = []
+        parent_nodes = []
 
-    return Tensor(data, requires_grad, depends_on)
+    return Tensor(data, requires_grad, parent_nodes)
 
 #@TODO
 

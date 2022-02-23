@@ -52,3 +52,12 @@ class Momentum(Optimizer_base):
             assert isinstance(v, Tensor)
             parameter -= v
             parameter.v = v
+
+class Adam(Optimizer_base):
+    def __init__(self, params:Iterator[Parameter], lr: float = 0.01):
+        super().__init__(params)
+        self.lr = lr
+        self.b1 = 0.9
+        self.b2 = 0.999
+        self.eps = 1e-8
+        
