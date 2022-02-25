@@ -153,6 +153,9 @@ class Tensor:
     def transpose(self) -> 'Tensor':
         return _transpose(self)
 
+    def sqrt(self) -> 'Tensor':
+        return _sqrt(self)
+
 '''TENSOR FUNCTIONS'''
 
 def _tensor_sum(t: Tensor, axis:Optional[int] = None, keep_dims:bool = False) -> Tensor:
@@ -443,6 +446,18 @@ def _abs(t:Tensor) -> Tensor:
     else:
         parent_nodes = []
 
+    return Tensor(data, requires_grad, parent_nodes)
+
+def _sqrt(t:Tensor) -> Tensor:
+    data = np.sqrt(t.data)
+    requires_grad = t.requires_grad
+    if requires_grad:
+        def grad_fn(grad:np.ndarray) -> np.ndarray:
+            return grad * (2 * np.sqrt(t.data) ** -1)
+        parent_nodes = [Node(t, grad_fn)]
+    else:
+        parent_nodes = []
+        
     return Tensor(data, requires_grad, parent_nodes)
 
 #@TODO

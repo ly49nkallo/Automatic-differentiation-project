@@ -2,6 +2,7 @@ from ast import Param
 from typing import Iterator
 from autograd.parameter import Parameter
 from autograd.tensor import Tensor
+import numpy as np
 
 """
 Optimizers go here
@@ -60,4 +61,18 @@ class Adam(Optimizer_base):
         self.b1 = 0.9
         self.b2 = 0.999
         self.eps = 1e-8
+        self.timestep = 0
         
+    def step(self) -> None:
+        self.timestep += 1
+        for parameter in self.parameters:
+            g = parameter.grad.data
+            m = self.b1 * parameter.m + (1-self.b1) * g
+            v = self.b2 * parameter.v + (1-self.b2) * (g * g)
+            mhat = m / (1 - self.b1 ** self.timestep)
+            vhat = v / (1 - self.b2 ** self.timestep)
+            parameter.v = v
+            parameter.m = m
+            parameter -= self.lr / (np.sqrt(vhat) + self.eps) * mhat
+
+

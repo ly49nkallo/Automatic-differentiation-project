@@ -5,7 +5,7 @@ import time
 
 from autograd.dataloader import Dataloader
 from autograd.tensor import Tensor
-from autograd.optim import SGD, Momentum
+from autograd.optim import SGD, Momentum, Adam
 from autograd.module import Module, Linear
 from autograd.activation import *
 from autograd.functional import *
@@ -57,7 +57,7 @@ def main():
     loader = Dataloader('mnist', 16, shuffle=True)
     test_loader = Dataloader('mnist', 1000, train=False, shuffle=True)
     model = Mlp(28*28, 10)
-    optimizer = Momentum(model.parameters(), lr = 0.01)
+    optimizer = Adam(model.parameters(), lr = 0.01)
     epochs = 5
     test()
     for i in range(epochs):
