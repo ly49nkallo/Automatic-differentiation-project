@@ -3,3 +3,4 @@ venv/**
 **/data/**
 */.mypy_cache/*
 */.pytest_cache/*
+.vs/**

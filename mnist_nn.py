@@ -10,6 +10,7 @@ from autograd.module import Module, Linear
 from autograd.activation import *
 from autograd.functional import *
 
+
 class Mlp(Module):
     def __init__(self, in_features, out_features):
         super().__init__()
