@@ -19,7 +19,7 @@ Ty Brennan
 
     $ `pip install matplotlib numpy tqdm datasets`
 
-3. In order to run the MNIST model, run
+3. In order to run the MNIST model, navigate to this directory and run
    
     $ `python mnist_nn.py`
 
