@@ -9,8 +9,7 @@ from autograd.module import Module, Linear
 from autograd.activation import Sigmoid, Tanh, Softmax
 from autograd.functional import *
 
-plt.plot(np.arange(100)**2)
-plt.plot(np.arange(100)**2 // 2)
-plt.title("test title")
-plt.legend(('blue', 'orange'), title='title')
-plt.show()
+a = Tensor(np.ones((5,5)), requires_grad=True)
+b = a.view(25)
+b.backward(np.zeros((25,)))
+print(a.grad, b.grad)

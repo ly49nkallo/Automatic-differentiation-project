@@ -29,7 +29,7 @@ class Tensor:
         self.data = ensure_array(data)
         self.requires_grad = requires_grad
         self.parent_nodes = parent_nodes or []
-        self.shape = self.data.shape
+        #self.shape = self.data.shape
         self.grad:Optional['Tensor'] = None
 
         if self.requires_grad:
@@ -43,6 +43,10 @@ class Tensor:
     def size(self) -> int:
         return self.data.size
 
+    @property
+    def shape(self):
+        return self.data.shape
+
     @data.setter
     def data(self, value):
         self._data = value
@@ -52,6 +56,9 @@ class Tensor:
 
     def __repr__(self):
         return f"Tensor({self.data}, requires_grad={self.requires_grad})"
+
+    def __len__(self):
+        return self.size
 
     def truth(self):
         warn('truth value of tensor defaults to its data')
@@ -155,6 +162,9 @@ class Tensor:
 
     def sqrt(self) -> 'Tensor':
         return _sqrt(self)
+    
+    def view(self, *shape) -> 'Tensor':
+        return _view(self, *shape)
 
 '''TENSOR FUNCTIONS'''
 
@@ -172,9 +182,9 @@ def _tensor_sum(t: Tensor, axis:Optional[int] = None, keep_dims:bool = False) ->
                 return grad * np.ones_like(t.data)
             else:
                 ''' grad is a tensor that is the same shape as t.data minus the summed out axis'''
-                print('shape', t.shape)
+                #print('shape', t.shape)
                 shape = t.shape[:axis]+t.shape[axis+1:]
-                print('shape', shape)
+                #print('shape', shape)
                 return grad * np.ones(shape)
         parent_nodes = [Node(t, grad_fn)]
     else:
@@ -468,5 +478,12 @@ def _expand_dim(t:Tensor, dim:int):
 def _transpose(t:Tensor):
     raise NotImplementedError
 
-def _view(t:Tensor):
-    raise NotImplementedError
+def _view(t:Tensor, *shape):
+    data = t.data.reshape(shape)
+    requires_grad = t.requires_grad
+    if requires_grad:
+        parent_nodes = [Node(t, lambda grad: np.reshape(grad, t.shape))]
+    else:
+        parent_nodes = []
+    
+    return Tensor(data, requires_grad, parent_nodes)

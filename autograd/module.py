@@ -3,6 +3,7 @@ from typing import Optional, Dict, Union, Set, Iterator, Callable, Any, Tuple
 from autograd.tensor import Tensor
 from autograd.parameter import Parameter
 from collections import OrderedDict
+import autograd.functional as F
 
 def _forward_unimplmented(self, *input: Any) -> None:
     r'''This gets called as a placeholder if the programmer forgets
@@ -272,4 +273,12 @@ class Linear(Module):
         out = x @ self.w + self.b
         #assert out.shape == (32, 10), out.shape
         return out
+
+class Dropout(Module):
+    def __init__(self, discard_rate:float) -> None:
+        super().__init__()
+        self.discard_rate = discard_rate
+    
+    def forward(self, x):
+        ...
 

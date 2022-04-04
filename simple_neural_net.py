@@ -2,9 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from autograd import Tensor, Module
-from autograd.optim import SGD
+from autograd.optim import SGD, Adam
 from autograd.module import Linear
-from autograd.activation import Sigmoid
+from autograd.activation import Sigmoid, Tanh
 
 def xor_gate(a, b):
     assert isinstance(a, int) and isinstance(b, int)
@@ -18,8 +18,8 @@ class model(Module):
         super().__init__()
         self.linear = Linear(in_features, 5)
         self.linear2 = Linear(5, out_features)
-        self.act = Sigmoid()
-        self.act2 = Sigmoid()
+        self.act = Tanh()
+        self.act2 = Tanh()
 
     def forward(self, x):
         x = self.linear(x)
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     net = model(2, 1)
     #print(list(net.parameters()))
-    optimizer = SGD(net.parameters(), lr=0.01)
+    optimizer = Adam(net.parameters(), lr=0.01)
     batch_size = 32
     print(x_train.shape, y_train.shape)
 

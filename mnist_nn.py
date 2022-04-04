@@ -17,8 +17,8 @@ class Mlp(Module):
         self.linear = Linear(in_features, 128)
         self.linear2 = Linear(128, 32)
         self.linear3 = Linear(32, out_features)
-        self.act = Sigmoid()
-        self.act2 = Sigmoid()
+        self.act = Tanh()
+        self.act2 = Tanh()
 
     def forward(self, x):
         x = self.linear(x)

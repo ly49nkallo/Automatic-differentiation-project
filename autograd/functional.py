@@ -5,7 +5,8 @@ import numpy as np
 from typing import Optional, Union
 
 def tanh(t:Tensor) -> Tensor:
-    data = (np.exp(t.data) - np.exp(-t.data) / np.exp(t.data) + np.exp(-t.data))
+    #bugfix 14.3
+    data = (np.exp(t.data) - np.exp(-t.data)) / (np.exp(t.data) + np.exp(-t.data))
     requires_grad = t.requires_grad
     if requires_grad:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
@@ -77,9 +78,13 @@ def nll(input:Tensor, target:Tensor, dim=1) -> Tensor:
     # https://deepnotes.io/softmax-crossentropy
     # input.shape == (batch_size, num_classes)
     # target.shape == (num_classes, 1)
-    m = target.shape[0]
+    if len(target.shape) > 1:
+        m = target.shape[0]
+    else: m = 1
     p = stable_softmax(input.data)
+    #print(p)
     #assert target.data.ndim == 2
+    #print(target.data)
     log_likelihood = -np.log(p[range(m), target.data])
     data = np.sum(log_likelihood) / m
     requires_grad = input.requires_grad
@@ -96,6 +101,7 @@ def nll(input:Tensor, target:Tensor, dim=1) -> Tensor:
 
     
 def stable_softmax(X:np.ndarray):
+    assert X.ndim > 1, "X must be shaped like (batch, *data)"
     exps = np.exp(X - np.max(X))
     return (exps.T / np.expand_dims(np.sum(exps, axis=1), 1).T).T
 
@@ -124,3 +130,8 @@ def one_hot_encode(t1:Tensor, num_of_classes:int = None, dtype:Optional[Union[fl
     data[np.arange(a.size), a] = 1
     if squeeze: data = data.squeeze()
     return Tensor(data.astype(dtype))
+
+def dropout(t1:Tensor, rate:float) -> Tensor:
+    r''' Utility function that randomly sets values in a tensor to zero '''
+    data = np.random.binomial()
+    print(data)
