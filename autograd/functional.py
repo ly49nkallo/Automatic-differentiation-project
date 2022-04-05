@@ -17,6 +17,22 @@ def tanh(t:Tensor) -> Tensor:
     
     return Tensor(data, requires_grad, parent_nodes)
 
+def logsig(t:Tensor) -> Tensor:
+    try:
+        data = 1 / (1 + np.exp(-t.data))
+    except RuntimeWarning:
+        print(t.data)
+    requires_grad = t.requires_grad
+    if requires_grad:
+        def grad_fn(grad:np.ndarray) -> np.ndarray:
+            return grad * (data * (1 - data))
+        
+        parent_nodes = [Node(t, grad_fn)]
+    else:
+        parent_nodes = []
+
+    return Tensor(data, requires_grad, parent_nodes)
+
 def relu(t:Tensor) -> Tensor:
     data = np.maximum(t.data, np.zeros_like(t.data))
     requires_grad = t.requires_grad

@@ -166,7 +166,7 @@ class Tensor:
     def view(self, *shape) -> 'Tensor':
         return _view(self, *shape)
 
-'''TENSOR FUNCTIONS'''
+'''==============================TENSOR FUNCTIONS=============================='''
 
 def _tensor_sum(t: Tensor, axis:Optional[int] = None, keep_dims:bool = False) -> Tensor:
     "Wraps the np.sum and returns a zero-tensor"
