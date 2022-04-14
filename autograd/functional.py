@@ -94,9 +94,7 @@ def nll(input:Tensor, target:Tensor, dim=1) -> Tensor:
     # https://deepnotes.io/softmax-crossentropy
     # input.shape == (batch_size, num_classes)
     # target.shape == (num_classes, 1)
-    if len(target.shape) > 1:
-        m = target.shape[0]
-    else: m = 1
+    m = target.shape[0]
     p = stable_softmax(input.data)
     #print(p)
     #assert target.data.ndim == 2
@@ -117,7 +115,10 @@ def nll(input:Tensor, target:Tensor, dim=1) -> Tensor:
 
     
 def stable_softmax(X:np.ndarray):
-    assert X.ndim > 1, "X must be shaped like (batch, *data)"
+    if X.ndim < 2:
+        raise ValueError(f"X must be shaped like (batch, *data), instead got tensor of shape {X.shape}")
+    if not isinstance(X, np.ndarray):
+        raise TypeError("Expected input of type np.ndarray, instead got {}".format(X.type))
     exps = np.exp(X - np.max(X))
     return (exps.T / np.expand_dims(np.sum(exps, axis=1), 1).T).T
 
@@ -129,23 +130,33 @@ def binxent(output:Tensor, labels:Tensor) -> Tensor:
 def log(t1:Tensor) -> Tensor:
     return _log(t1)
 
-def one_hot_encode(t1:Tensor, num_of_classes:int = None, dtype:Optional[Union[float, int]] = int, squeeze:bool = True) -> Tensor:
-    r''' A utility function that takes a tensor and returns a one hot encoding
-            (note: this function should be used on non gradient tracking tensors only'''
+def one_hot_encode(t1:Tensor, num_of_classes:int = None, 
+                    dtype:Optional[Union[float, int]] = int, squeeze:bool = True) -> Tensor:
+    r'''A utility function that takes a tensor and returns a one hot encoding
+            (note: this function should be used on non gradient tracking tensors only
+            
+        Args: 
+            t1 (Tensor): a n-tensor containing the data that should be encoded into a n+1-tensor
+            num_of_classes (int): the number of classes to encode
+            dtype (float, int): output data type
+            squeeze (bool): Whether you want the output to be squeezed (will be depreciated)
+            
+        Returns:
+            A tensor containing the encoded data (usually n+1-Tensor)'''
 
-    # t1.shape == (num_of_batches, batch_size,)
+    # t1.shape == (num_of_batches, batch_size,) or t1.shape == (batch_size)
     # data.shape == (num_of_batches, batch_size, num_of_values)
     # @TODO clean up this code it is amazingly sloppy
-    
     a = t1.data.astype(int)
-    if num_of_classes is None: num_of_classes = a.max() + 1
-    #assert num_of_classes == 10
     a = a.squeeze()
+    if a.ndim > 1: raise ValueError("Input Tensor has more than one working dimensions, shape: {}".format(a.shape))
+    if num_of_classes is None: num_of_classes = a.max() + 1
+    
     assert a.ndim == 1 or a.ndim == 0, f'only accepts 1 or 0 tensors, got {a.ndim} dim tensor' + f' {a.shape}'
     data = np.zeros((a.size, num_of_classes))
     data[np.arange(a.size), a] = 1
     if squeeze: data = data.squeeze()
-    return Tensor(data.astype(dtype))
+    return Tensor(data.astype(dtype), requires_grad=False)
 
 def dropout(t1:Tensor, rate:float) -> Tensor:
     r''' Utility function that randomly sets values in a tensor to zero '''

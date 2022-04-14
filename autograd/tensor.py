@@ -47,6 +47,10 @@ class Tensor:
     def shape(self):
         return self.data.shape
 
+    @property
+    def ndim(self):
+        return self.data.ndim
+
     @data.setter
     def data(self, value):
         self._data = value
