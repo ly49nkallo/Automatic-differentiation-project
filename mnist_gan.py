@@ -58,22 +58,21 @@ fixed_noise = Tensor(np.random.randn(batch_size, z_dim))
 data_loader = Dataloader('mnist', batch_size)
 opt_disc = optim.Adam(disc.parameters(), lr=lr)
 opt_gen = optim.Adam(gen.parameters(), lr=lr)
-criterion = F.nll
+criterion = F.binxent
 step = 0
 
 for epoch in range(num_epochs):
     for batch_idx, (real, _) in enumerate(data_loader):
         real = real.reshape(-1, 784)
         real = Tensor(real)
-        batch_size = real.shape[0]
-
+        assert real.shape[0] == batch_size
         ### Train Discriminator: max log(D(x)) + log(1 - D(G(z)))  
         noise = Tensor(np.random.randn(batch_size, z_dim))
         fake = gen(noise)
-        disc_real = disc(real).view(-1)
-        lossD_real = criterion(disc_real, Tensor(np.ones(disc_real.shape)))
+        disc_real = disc(real)
+        lossD_real = criterion(disc_real, Tensor(np.ones(disc_real.shape, dtype=int)))
         disc_fake = disc(fake).view(-1)
-        lossD_fake = criterion(disc_fake, Tensor(np.zeros(disc_fake.shape)))
+        lossD_fake = criterion(disc_fake, Tensor(np.zeros(disc_fake.shape, dtype=int)))
         lossD = (lossD_real + lossD_fake) / 2
         disc.zero_grad()
         lossD.backward()

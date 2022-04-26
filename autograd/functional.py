@@ -88,17 +88,15 @@ def nll(input:Tensor, target:Tensor, dim=1) -> Tensor:
     r'''Negative-log-likelihood loss function with softmax
             Args:
                 input (Tensor): a direct output of the network without softmax
-                target (Tensor: a tensor containing labels
+                target (Tensor): a tensor containing labels
                 
-            Note: target shape's first dimention must be dimension num_classes'''
+            Note: target shape's first dimension must be dimension num_classes'''
     # https://deepnotes.io/softmax-crossentropy
     # input.shape == (batch_size, num_classes)
-    # target.shape == (num_classes, 1)
+    # ###labels.shape == (batch_size, 1)
     m = target.shape[0]
     p = stable_softmax(input.data)
-    #print(p)
-    #assert target.data.ndim == 2
-    #print(target.data)
+
     log_likelihood = -np.log(p[range(m), target.data])
     data = np.sum(log_likelihood) / m
     requires_grad = input.requires_grad
@@ -123,9 +121,26 @@ def stable_softmax(X:np.ndarray):
     return (exps.T / np.expand_dims(np.sum(exps, axis=1), 1).T).T
 
 
-def binxent(output:Tensor, labels:Tensor) -> Tensor:
-    r''' Binary Cross Entopy, takes binary labels'''
-    raise NotImplementedError()
+def binxent(input:Tensor, labels:Tensor) -> Tensor:
+    r''' Binary Cross Entopy, similar to nll but takes binary labels
+                Args:
+                    input (Tensor): a direct output of the network without softmax
+                    target (Tensor: a tensor containing binary labels'''
+    # input.shape == (batch_size, 1)
+    # labels.shape == (batch_size, 1)
+    assert input.shape == labels.shape, 'binxent expects the same shape for labels and input'
+    m = input.shape[0]
+    p = input.data
+    y = labels.data
+    data = - (1/m) * np.sum(y*np.log(p) + (1-y)*np.log(1-p))
+    requires_grad = input.requires_grad
+    if requires_grad:
+        def grad_fn(grad:np.ndarray) -> np.ndarray:
+            return -y/(p+1e-5) + (1-y)/(1-p+1e-5)
+        parent_nodes = [Node(input, grad_fn)]
+    else:
+        parent_nodes = []
+    return Tensor(data, requires_grad, parent_nodes) 
     
 def log(t1:Tensor) -> Tensor:
     return _log(t1)

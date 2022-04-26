@@ -258,6 +258,14 @@ class Module:
 
         return sorted(keys)
 
+    def zero_grad(self, set_to_none:bool = False) -> None:
+        '''Zero out every parameter's gradient that is stored in this optimizer'''
+        for parameter in self.parameters():
+            if set_to_none:
+                parameter.grad = None
+            else:
+                parameter.zero_grad()
+
 class Linear(Module):
     def __init__(self, in_features, out_features) -> None:
         super().__init__()
