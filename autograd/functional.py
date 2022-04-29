@@ -72,7 +72,7 @@ def mse(predicted:Tensor, actual:Tensor, is_one_hot = True) -> Tensor:
 def minxent(input:Tensor, target:Tensor, is_one_hot = False, dim=1) -> Tensor:
     r'''AKA Categorical Cross entropy loss by statastitians or negative log likelihood (NLL)
         Args:
-            input (Tensor): the input tensor (preferably softmaxed)
+            input (Tensor): the input tensor (preferably NOT softmaxed)
             target (Tensor): a tensor containing the ground truth (preferably one-hot vector)'''
     
     # input.shape (batch_size, num_classes)
@@ -128,19 +128,30 @@ def binxent(input:Tensor, labels:Tensor) -> Tensor:
                     target (Tensor: a tensor containing binary labels'''
     # input.shape == (batch_size, 1)
     # labels.shape == (batch_size, 1)
+    raise NotImplementedError
     assert input.shape == labels.shape, 'binxent expects the same shape for labels and input'
+    assert input.shape[1] == 1
     m = input.shape[0]
-    p = input.data
+    # input probabilities
+    p = stable_softmax(input.data)
+    # binary labels (1 or 0)
     y = labels.data
-    data = - (1/m) * np.sum(y*np.log(p) + (1-y)*np.log(1-p))
+    data = -(1/m) * np.sum(y*np.clip(np.log(p), -100, 100) + (1-y)*np.clip(np.log(1-p), -100, 100))
     requires_grad = input.requires_grad
     if requires_grad:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
-            return -y/(p+1e-5) + (1-y)/(1-p+1e-5)
+            assert np.min(p) > 0
+            g = y/p - (1-y)/(1-p)
+            return grad * g
         parent_nodes = [Node(input, grad_fn)]
     else:
         parent_nodes = []
     return Tensor(data, requires_grad, parent_nodes) 
+
+def BCELoss(input:Tensor, labels:Tensor) -> Tensor:
+    assert input.shape == labels.shape
+    ones = Tensor(np.ones(input.shape))
+    return (labels * input + (ones - labels) * (ones - input)).sum() / Tensor(input.shape[0])
     
 def log(t1:Tensor) -> Tensor:
     return _log(t1)
