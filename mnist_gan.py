@@ -58,7 +58,7 @@ fixed_noise = Tensor(np.random.randn(batch_size, z_dim))
 data_loader = Dataloader('mnist', batch_size)
 opt_disc = optim.Adam(disc.parameters(), lr=lr)
 opt_gen = optim.Adam(gen.parameters(), lr=lr)
-criterion = F.binxent
+criterion = F.BCELoss
 step = 0
 
 for epoch in range(num_epochs):
