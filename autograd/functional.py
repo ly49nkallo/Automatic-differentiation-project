@@ -151,10 +151,20 @@ def binxent(input:Tensor, labels:Tensor) -> Tensor:
 def BCELoss(input:Tensor, labels:Tensor) -> Tensor:
     assert input.shape == labels.shape
     ones = Tensor(np.ones(input.shape))
-    return (labels * input + (ones - labels) * (ones - input)).sum() / Tensor(input.shape[0])
+    return (labels * clipped_log(input) + (ones - labels) * (ones - clipped_log(input))).sum() / Tensor(input.shape[0])
     
 def log(t1:Tensor) -> Tensor:
     return _log(t1)
+
+def clipped_log(t1:Tensor, clip=100) -> Tensor:
+    data = np.clip(np.log(t1.data), -clip, clip)
+    requires_grad = t1.requires_grad
+    if requires_grad:
+        parent_nodes = [Node(t1, lambda grad: grad / t1.data)]
+    else:
+        parent_nodes = []
+
+    return Tensor(data, requires_grad, parent_nodes)
 
 def one_hot_encode(t1:Tensor, num_of_classes:int = None, 
                     dtype:Optional[Union[float, int]] = int, squeeze:bool = True) -> Tensor:

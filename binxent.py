@@ -12,15 +12,13 @@ def test_simple_minxent():
 
     #assert np.abs(np.sum(t2.data) - 1.) < 1e-3 # there is still some numerical instability
     
-    for _ in range(100):
-        t1 = Tensor(t1.data - (t1.grad.data * 0.3), requires_grad=True)
+    for _ in range(400):
+        t1 = Tensor(t1.data - (t1.grad.data * 0.5), requires_grad=True)
         t3 = BCELoss(t1, labels)
         print(t3.data)
         history.append((0, t3.data.copy()))
         t3.backward()
 
-        
-        
         #print(t1.grad.data)
         #print(t2.grad.data)
     
