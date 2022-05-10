@@ -160,7 +160,7 @@ def clipped_log(t1:Tensor, clip=100) -> Tensor:
     data = np.clip(np.log(t1.data), -clip, clip)
     requires_grad = t1.requires_grad
     if requires_grad:
-        parent_nodes = [Node(t1, lambda grad: grad / t1.data)]
+        parent_nodes = [Node(t1, lambda grad: np.clip(grad / t1.data, -100, 100))]
     else:
         parent_nodes = []
 

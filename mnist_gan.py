@@ -67,8 +67,9 @@ for epoch in range(num_epochs):
         real = Tensor(real)
         assert real.shape[0] == batch_size
         ### Train Discriminator: max log(D(x)) + log(1 - D(G(z)))  
-        noise = Tensor(np.random.randn(batch_size, z_dim))
+        noise = Tensor(np.random.randn(batch_size, z_dim), requires_grad=True)
         fake = gen(noise)
+        assert isinstance(fake, Tensor)
         disc_real = disc(real)
         lossD_real = criterion(disc_real, Tensor(np.ones(disc_real.shape, dtype=int)))
         disc_fake = disc(fake).view(-1)
@@ -86,6 +87,7 @@ for epoch in range(num_epochs):
         output = disc(fake).view(-1)
         lossG = criterion(output, Tensor(np.ones_like(output.data)))
         gen.zero_grad()
+        for module in disc.named_modules(): print(module)
         lossG.backward()
         opt_gen.step()
 
