@@ -1,27 +1,44 @@
 from datasets import load_dataset
 import numpy as np
 
+def dummy_msg(dset:str): return f"Using dummy dataset for {dset}"
 class Dataloader:
     '''A class that allows us to get batches of data from huggingface datsets'''
-    def __init__(self, dataset:str,batch_size, 
+    def __init__(self, dataset:str,batch_size:int, 
                 transforms:list=list(), 
-                train=True,
-                shuffle=False):
+                train:bool=True,
+                shuffle:bool=False,
+                dummy:bool=False):
         self.dataset = dataset.upper()
         self.batch_size = batch_size
         self.train = train
-        assert isinstance(self.dataset, str)
+        assert isinstance(self.dataset, str) and isinstance(self.batch_size, int)
         if self.dataset == 'MNIST':
+            # Data source
+            # https://huggingface.co/datasets/mnist
             if train:
-                self.dset = load_dataset('mnist', split='train')
+                #shape is image:(60000,28,28) label: (60000)
+                if not dummy:
+                    self.dset = load_dataset('mnist', split='train')
+                else:
+                    print(dummy_msg(self.dataset.lower().strip()))
+                    image = np.clip(np.random.randn(60000,28,28) * 255, 0, 255)
+                    label = np.random.randint(0,10,60000)
+                    self.dset = {'image':image, 'label':label}
             else:
-                self.dset = load_dataset('mnist', split='test')
+                if not dummy:
+                    self.dset = load_dataset('mnist', split='test')
+                else:
+                    print(dummy_msg(self.dataset.lower().strip()))
+                    image = np.clip(np.random.randn(10000,28,28) * 255, 0, 255)
+                    label = np.random.randint(0,10,10000)
+                    self.dset = {'image':image, 'label':label}
             self.data = self.dset['image']
             self.label = self.dset['label']
             del self.dset
             self.pairs = list(zip(self.data, self.label))
             if shuffle:
-                np.random.seed(69420)
+                np.random.seed(123)
                 np.random.shuffle(self.pairs)
             self.data, self.label = zip(*self.pairs)
             self.data = np.array(list(map(lambda img: np.array(img) / 255, self.data))).reshape(-1, 28, 28)

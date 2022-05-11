@@ -58,7 +58,7 @@ def main():
             100. * correct / len(data.data.copy())))
             
     history = []
-    loader = Dataloader('mnist', batch_size, shuffle=True)
+    loader = Dataloader('mnist', batch_size, shuffle=True, dummy=True)
     test_loader = Dataloader('mnist', 1000, train=False, shuffle=True)
     model = Mlp(28*28, 10)
     optimizer = Adam(model.parameters(), lr = 0.01)

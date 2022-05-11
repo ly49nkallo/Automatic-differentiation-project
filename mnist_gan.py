@@ -88,6 +88,7 @@ for epoch in range(num_epochs):
         lossG = criterion(output, Tensor(np.ones_like(output.data)))
         gen.zero_grad()
         for module in disc.named_modules(): print(module)
+        print(lossG, lossG.parent_nodes[0].tensor.parent_nodes)
         lossG.backward()
         opt_gen.step()
 

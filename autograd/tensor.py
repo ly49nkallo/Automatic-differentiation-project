@@ -25,14 +25,12 @@ class Tensor:
     def __init__(self,
                 data:Array_like,
                 requires_grad:bool = False,
-                parent_nodes:List[Node] = None,
-                name:Optional[str] = None) -> None:
+                parent_nodes:List[Node] = None) -> None:
         self.data = ensure_array(data)
         self.requires_grad = requires_grad
         self.parent_nodes = parent_nodes or []
         #self.shape = self.data.shape
         self.grad:Optional['Tensor'] = None
-        self.name:Optional[str] = name
 
         if self.requires_grad:
             self.zero_grad()
