@@ -129,8 +129,12 @@ class Tensor:
             else:
                 raise RuntimeError('grad must a specified for a non-0-dim tensor')
         #assert self.grad is not None
-        self.grad.data = self.grad.data + grad.data #type: ignore
-    
+        try:
+            self.grad.data = self.grad.data + grad.data #type: ignore
+        except AttributeError:
+            print(self.grad)
+            print(grad)
+            raise Exception
         for parent in self.parent_nodes:
             backward_grad = parent.grad_fn(grad.data)
             parent.tensor.backward(Tensor(backward_grad))

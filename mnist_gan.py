@@ -1,4 +1,3 @@
-from matplotlib import backend_tools
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
@@ -55,7 +54,7 @@ num_epochs = 2
 disc = Discriminator(image_dim)
 gen = Generator(z_dim, image_dim)
 fixed_noise = Tensor(np.random.randn(batch_size, z_dim))
-data_loader = Dataloader('mnist', batch_size)
+data_loader = Dataloader('mnist', batch_size, dummy=True)
 opt_disc = optim.Adam(disc.parameters(), lr=lr)
 opt_gen = optim.Adam(gen.parameters(), lr=lr)
 criterion = F.BCELoss
@@ -64,11 +63,14 @@ step = 0
 for epoch in range(num_epochs):
     for batch_idx, (real, _) in enumerate(data_loader):
         real = real.reshape(-1, 784)
-        real = Tensor(real)
+        print(np.amax(real), np.amin(real))
+        real = Tensor(real, requires_grad=True)
         assert real.shape[0] == batch_size
         ### Train Discriminator: max log(D(x)) + log(1 - D(G(z)))  
         noise = Tensor(np.random.randn(batch_size, z_dim), requires_grad=True)
         fake = gen(noise)
+        print(np.amax(fake.data), np.amin(fake.data))
+        #plt.imshow(fake.data[1].reshape(28,28))
         assert isinstance(fake, Tensor)
         disc_real = disc(real)
         lossD_real = criterion(disc_real, Tensor(np.ones(disc_real.shape, dtype=int)))
@@ -76,6 +78,7 @@ for epoch in range(num_epochs):
         lossD_fake = criterion(disc_fake, Tensor(np.zeros(disc_fake.shape, dtype=int)))
         lossD = (lossD_real + lossD_fake) / 2
         disc.zero_grad()
+        print(lossD)
         lossD.backward()
         opt_disc.step()
 
@@ -87,8 +90,7 @@ for epoch in range(num_epochs):
         output = disc(fake).view(-1)
         lossG = criterion(output, Tensor(np.ones_like(output.data)))
         gen.zero_grad()
-        for module in disc.named_modules(): print(module)
-        print(lossG, lossG.parent_nodes[0].tensor.parent_nodes)
+
         lossG.backward()
         opt_gen.step()
 

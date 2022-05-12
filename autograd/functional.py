@@ -150,8 +150,11 @@ def binxent(input:Tensor, labels:Tensor) -> Tensor:
 
 def BCELoss(input:Tensor, labels:Tensor) -> Tensor:
     assert input.shape == labels.shape
+    assert input.requires_grad
     ones = Tensor(np.ones(input.shape))
-    return (labels * clipped_log(input) + (ones - labels) * (ones - clipped_log(input))).sum() / Tensor(input.shape[0])
+    a = (labels * clipped_log(input) + (ones - labels) * (ones - clipped_log(input))).sum() / Tensor(input.shape[0])
+    assert a.requires_grad
+    return a
     
 def log(t1:Tensor) -> Tensor:
     return _log(t1)
