@@ -119,24 +119,28 @@ class Tensor:
 
     def zero_grad(self) -> None:
         self.grad = Tensor(np.zeros_like(self.data))
+        assert self.grad is not None
 
     def backward(self, grad:'Tensor' = None):
         assert self.requires_grad, "called backwards on tensor that doesn't require gradient"
-
+        assert self.grad is not None
         if grad is None:
             if self.shape == ():
                 grad = Tensor(1.)
             else:
                 raise RuntimeError('grad must a specified for a non-0-dim tensor')
-        #assert self.grad is not None
+        # assert self.grad is not None
         try:
             self.grad.data = self.grad.data + grad.data #type: ignore
         except AttributeError:
-            print(self.grad)
-            print(grad)
+            print('self.data.shape is', self.data.shape)
+            print('self.grad is', self.grad)
+            print('grad is', grad)
             raise Exception
+
         for parent in self.parent_nodes:
             backward_grad = parent.grad_fn(grad.data)
+            assert backward_grad is not None
             parent.tensor.backward(Tensor(backward_grad))
 
     '''Tensor operations'''
@@ -184,7 +188,7 @@ def _tensor_sum(t: Tensor, axis:Optional[int] = None, keep_dims:bool = False) ->
     if requires_grad:
         def grad_fn(grad: np.ndarray) -> np.ndarray:
             if axis is None:
-                '''+
+                '''
                     grad is a zero-tensor so each element contributes that much
                 '''
                 return grad * np.ones_like(t.data)
@@ -489,8 +493,11 @@ def _transpose(t:Tensor):
 def _view(t:Tensor, *shape):
     data = t.data.reshape(shape)
     requires_grad = t.requires_grad
+    
     if requires_grad:
-        parent_nodes = [Node(t, lambda grad: np.reshape(grad, t.shape))]
+        def grad_fn(grad:np.ndarray) -> np.ndarray:
+            return np.reshape(grad, t.shape)
+        parent_nodes = [Node(t, grad_fn)]
     else:
         parent_nodes = []
     

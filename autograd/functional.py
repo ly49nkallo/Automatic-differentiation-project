@@ -154,6 +154,9 @@ def BCELoss(input:Tensor, labels:Tensor) -> Tensor:
     ones = Tensor(np.ones(input.shape))
     a = (labels * clipped_log(input) + (ones - labels) * (ones - clipped_log(input))).sum() / Tensor(input.shape[0])
     assert a.requires_grad
+    assert a.grad is not None
+    assert len(a.parent_nodes) != 0
+    print (a.parent_nodes[0].grad_fn)
     return a
     
 def log(t1:Tensor) -> Tensor:
