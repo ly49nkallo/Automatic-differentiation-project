@@ -156,7 +156,6 @@ def BCELoss(input:Tensor, labels:Tensor) -> Tensor:
     assert a.requires_grad
     assert a.grad is not None
     assert len(a.parent_nodes) != 0
-    print (a.parent_nodes[0].grad_fn)
     return a
     
 def log(t1:Tensor) -> Tensor:

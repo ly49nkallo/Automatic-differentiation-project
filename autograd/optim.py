@@ -27,6 +27,7 @@ class Optimizer_base:
         '''Zero out every parameter's gradient that is stored in this optimizer'''
         for parameter in self.parameters:
             if set_to_none:
+                print('set to none')
                 parameter.grad = None
             else:
                 parameter.zero_grad()

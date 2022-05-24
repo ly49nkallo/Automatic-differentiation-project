@@ -59,7 +59,7 @@ class Tensor:
         self.grad = None
 
     def __repr__(self):
-        return f"Tensor({self.data}, requires_grad={self.requires_grad})"
+        return f"Tensor({self.data}, self.grad={self.grad}, shape={self.shape}, requires_grad={self.requires_grad})"
 
     def __len__(self):
         return self.size
@@ -118,12 +118,12 @@ class Tensor:
         return _slice(self, idxs)
 
     def zero_grad(self) -> None:
-        self.grad = Tensor(np.zeros_like(self.data))
+        self.grad = Tensor(np.zeros(self.data.shape))
         assert self.grad is not None
 
     def backward(self, grad:'Tensor' = None):
         assert self.requires_grad, "called backwards on tensor that doesn't require gradient"
-        assert self.grad is not None
+        print(self.shape)
         if grad is None:
             if self.shape == ():
                 grad = Tensor(1.)
@@ -133,9 +133,7 @@ class Tensor:
         try:
             self.grad.data = self.grad.data + grad.data #type: ignore
         except AttributeError:
-            print('self.data.shape is', self.data.shape)
-            print('self.grad is', self.grad)
-            print('grad is', grad)
+            print(self)
             raise Exception
 
         for parent in self.parent_nodes:
