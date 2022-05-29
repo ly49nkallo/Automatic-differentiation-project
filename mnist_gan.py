@@ -34,7 +34,7 @@ class Generator(Module):
         self.fc1 = Linear(z_dim, 256)
         self.act1 = Sigmoid()
         self.fc2 = Linear(256, img_dim)
-        self.tanh = Sigmoid() # normalize inputs to [-1, 1] so make outputs [-1, 1]
+        self.tanh = Tanh() # normalize inputs to [-1, 1] so make outputs [-1, 1]
 
     def forward(self, x):
         x = self.fc1(x)
@@ -49,19 +49,20 @@ lr = 3e-4
 z_dim = 64
 image_dim = 28 * 28 * 1  # 784
 batch_size = 32
-num_epochs = 2
+num_epochs = 15
 
 disc = Discriminator(image_dim)
 gen = Generator(z_dim, image_dim)
 fixed_noise = Tensor(np.random.randn(batch_size, z_dim), requires_grad = True)
-data_loader = Dataloader('mnist', batch_size, dummy=True)
+data_loader = Dataloader('mnist', batch_size, dummy=False)
 opt_disc = optim.Adam(disc.parameters(), lr=lr)
 opt_gen = optim.Adam(gen.parameters(), lr=lr)
 criterion = F.BCELoss
 step = 0
 
 for epoch in range(num_epochs):
-    for batch_idx, (real, _) in enumerate(data_loader):
+    for batch_idx, (real, _) in (enumerate(tqdm(data_loader, desc=f"Epoch: {epoch + 1}", 
+                                                    ascii=True, colour='green'))):
         disc.zero_grad()
         gen.zero_grad()
         real = real.reshape(-1, 784)
@@ -75,7 +76,6 @@ for epoch in range(num_epochs):
         disc_fake = disc(fake).view(-1)
         lossD_fake = criterion(disc_fake, Tensor(np.zeros(disc_fake.shape, dtype=int)))
         lossD = (lossD_real + lossD_fake) / 2
-        print('lossD:', lossD)
         lossD.backward()
         opt_disc.step()
         
@@ -92,7 +92,28 @@ for epoch in range(num_epochs):
         if batch_idx == 0:
             print(
                 f"Epoch [{epoch}/{num_epochs}] Batch {batch_idx}/{len(data_loader)} \
-                      Loss D: {lossD:.4f}, loss G: {lossG:.4f}"
+                      Loss D: {lossD.data:.4f}, loss G: {lossG.data:.4f}"
             )
+fake_cpy = fake.data.copy().reshape(-1, 1, 28, 28)
+actual = real.data.copy().reshape(-1, 1, 28, 28)
+fig = plt.figure(figsize=(10,7))
+rows = 2
+columns = 8
+i = 0
+fake_cpy = fake.data.copy().reshape(-1, 1, 28, 28)
+actual = real.data.copy().reshape(-1, 1, 28, 28)
+fig = plt.figure(figsize=(10,7))
+rows = 2
+columns = 8
+for i in range(8):
+    i += 1
+    fig.add_subplot(rows, columns, i)
+    plt.imshow(fake_cpy[i-1,0])
+    plt.axis('off')
+for i in range(8):
+    i += 1
+    fig.add_subplot(rows, columns, i+8)
+    plt.imshow(actual[i-1,0])
+    plt.axis('off')
+plt.show()
 
-plt.show(output)

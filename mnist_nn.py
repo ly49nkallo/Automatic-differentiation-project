@@ -17,7 +17,7 @@ class Mlp(Module):
         self.linear = Linear(in_features, 128)
         self.linear2 = Linear(128, 32)
         self.linear3 = Linear(32, out_features)
-        self.act = Sigmoid()
+        self.act = ReLU()
         self.act2 = Sigmoid()
 
     def forward(self, x):
@@ -58,7 +58,7 @@ def main():
             100. * correct / len(data.data.copy())))
             
     history = []
-    loader = Dataloader('mnist', batch_size, shuffle=True, dummy=True)
+    loader = Dataloader('mnist', batch_size, shuffle=True, dummy=False)
     test_loader = Dataloader('mnist', 1000, train=False, shuffle=True)
     model = Mlp(28*28, 10)
     optimizer = Adam(model.parameters(), lr = 0.01)
