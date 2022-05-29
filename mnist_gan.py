@@ -30,7 +30,6 @@ class Discriminator(Module):
 
 class Generator(Module):
     def __init__(self, z_dim, img_dim):
-        assert img_dim == 28 * 28
         super().__init__()
         self.fc1 = Linear(z_dim, 256)
         self.act1 = Sigmoid()
@@ -54,7 +53,7 @@ num_epochs = 2
 
 disc = Discriminator(image_dim)
 gen = Generator(z_dim, image_dim)
-fixed_noise = Tensor(np.random.randn(batch_size, z_dim))
+fixed_noise = Tensor(np.random.randn(batch_size, z_dim), requires_grad = True)
 data_loader = Dataloader('mnist', batch_size, dummy=True)
 opt_disc = optim.Adam(disc.parameters(), lr=lr)
 opt_gen = optim.Adam(gen.parameters(), lr=lr)
@@ -63,7 +62,6 @@ step = 0
 
 for epoch in range(num_epochs):
     for batch_idx, (real, _) in enumerate(data_loader):
-        print('begin loop')
         disc.zero_grad()
         gen.zero_grad()
         real = real.reshape(-1, 784)
@@ -71,6 +69,7 @@ for epoch in range(num_epochs):
         ### Train Discriminator: max log(D(x)) + log(1 - D(G(z)))  
         noise = Tensor(np.random.randn(batch_size, z_dim), requires_grad = True)
         fake = gen(noise)
+        
         disc_real = disc(real)
         lossD_real = criterion(disc_real, Tensor(np.ones(disc_real.shape, dtype=int)))
         disc_fake = disc(fake).view(-1)
@@ -78,27 +77,18 @@ for epoch in range(num_epochs):
         lossD = (lossD_real + lossD_fake) / 2
         print('lossD:', lossD)
         lossD.backward()
-        print('computed discriminator loss')
         opt_disc.step()
-        print('steped with disciminator optimizer')
         
         ### Train Generator: min log(1 - D(G(z))) <-> max log(D(G(z))
         # where the second option of maximizing doesn't suffer from
         # saturating gradients
 
         output = disc(fake).view(-1)
-        assert output.shape == (batch_size,), output.shape
-        assert output.requires_grad and output.grad is not None
-        print('flattened output of discriminator')
         lossG = criterion(output, Tensor(np.ones_like(output.data)))
-        print('lossG:', lossG)
         gen.zero_grad()
-        print('zeroed generator gradient')
-        print([i.shape for i in list(opt_gen.parameters.__iter__())])
         lossG.backward()
-        print('computer generator loss')
         opt_gen.step()
-
+        
         if batch_idx == 0:
             print(
                 f"Epoch [{epoch}/{num_epochs}] Batch {batch_idx}/{len(data_loader)} \

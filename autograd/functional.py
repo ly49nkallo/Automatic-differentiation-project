@@ -150,12 +150,10 @@ def binxent(input:Tensor, labels:Tensor) -> Tensor:
 
 def BCELoss(input:Tensor, labels:Tensor) -> Tensor:
     assert input.shape == labels.shape
-    assert input.requires_grad
     ones = Tensor(np.ones(input.shape))
-    a = (labels * clipped_log(input) + (ones - labels) * (ones - clipped_log(input))).sum() / Tensor(input.shape[0])
-    assert a.requires_grad
-    assert a.grad is not None
-    assert len(a.parent_nodes) != 0
+    a = (labels * clipped_log(input) + (ones - labels) * (ones - clipped_log(input))).sum()
+
+    a = a / Tensor(input.shape[0])
     return a
     
 def log(t1:Tensor) -> Tensor:
@@ -165,7 +163,9 @@ def clipped_log(t1:Tensor, clip=100) -> Tensor:
     data = np.clip(np.log(t1.data), -clip, clip)
     requires_grad = t1.requires_grad
     if requires_grad:
-        parent_nodes = [Node(t1, lambda grad: np.clip(grad / t1.data, -100, 100))]
+        def grad_fn(grad:np.ndarray):
+            return np.clip(grad / t1.data, -100, 100)
+        parent_nodes = [Node(t1, grad_fn)]
     else:
         parent_nodes = []
 

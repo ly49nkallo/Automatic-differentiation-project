@@ -74,6 +74,6 @@ class Adam(Optimizer_base):
             vhat = v / (1 - self.b2 ** self.timestep)
             parameter.v = v
             parameter.m = m
-            parameter -= self.lr / (np.sqrt(vhat) + self.eps) * mhat
+            parameter = parameter - (self.lr / (np.sqrt(vhat) + self.eps) * mhat)
 
 

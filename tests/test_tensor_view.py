@@ -27,8 +27,17 @@ class TestView(unittest.TestCase):
     def test_flatten(self):
         t1 = Tensor(np.random.randn(2,3,4,5), requires_grad=True)
         t2 = t1.view(-1)
-        t2.backward(Tensor(np.zeros((2*3*4*5,))))
+        t3 = t2.sum()
+        t3.backward()
         assert t2.size == 2*3*4*5
-        assert t1.grad.data.tolist() == np.zeros((2,3,4,5)).tolist()
-        
+        assert t1.grad.data.tolist() == np.ones((2,3,4,5)).tolist()
+        del t1, t2
+
+        t1 = Tensor(np.random.randn(32,64), requires_grad=True)
+        t2 = t1.view(-1)
+        t3 = t2.sum()
+        t3 = t3 * t3.view(*t3.shape)
+        t3.backward()
+
+        assert t1.grad.data.tolist() == np.ones_like(t1.data).tolist()
 
