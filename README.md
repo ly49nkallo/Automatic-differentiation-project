@@ -7,7 +7,7 @@ Ty Brennan
 
 3-11-2021
 
-## [Link](https://docs.google.com/document/d/1K67vvfC8h6nGXEnZhsk5SrjyHCBEgaVq9hfA94rSfTc/edit?usp=sharing) to Project Portfolio:
+## [Link](https://docs.google.com/document/d/1K67vvfC8h6nGXEnZhsk5SrjyHCBEgaVq9hfA94rSfTc/edit?usp=sharing) to Project Portfolio
 
 ---
 
