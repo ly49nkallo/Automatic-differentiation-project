@@ -9,7 +9,17 @@ from autograd.module import Module, Linear
 from autograd.activation import Sigmoid, Tanh, Softmax
 from autograd.functional import *
 
-a = Tensor(np.ones((5,5)), requires_grad=True)
-b = a.view(25)
-b.backward(np.zeros((25,)))
-print(a.grad, b.grad)
+class testClass() :
+    def __init__(self, data:list) :
+        self.data = data
+
+    def inc(self) :
+        for d in self.data:
+            d = d + 1
+    
+def main():
+    c = testClass([1,2,3,4,5,6])
+    c.inc()
+    print(c.data)
+
+main()

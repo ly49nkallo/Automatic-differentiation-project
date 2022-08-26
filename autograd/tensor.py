@@ -292,7 +292,7 @@ def _neg(t: Tensor) -> Tensor:
     return Tensor(data, requires_grad, parent_nodes)
 
 def _sub(t1: Tensor, t2:Tensor) -> Tensor:
-    return t1 + -t2
+    return _add(t1, _neg(t2))
 
 def _matmul(t1: Tensor, t2: Tensor) -> Tensor:
     """

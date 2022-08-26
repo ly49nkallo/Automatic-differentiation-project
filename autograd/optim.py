@@ -74,6 +74,12 @@ class Adam(Optimizer_base):
             vhat = v / (1 - self.b2 ** self.timestep)
             parameter.v = v
             parameter.m = m
-            parameter = parameter - (self.lr / (np.sqrt(vhat) + self.eps) * mhat)
+            #TODO python does not pass by reference, only by assignment. Altering the parameter
+            #   here creates a new variable called "parameter" and gives it the assignment.
+            #   However, inplace works because it calls a function to alter the data in the variable in place.
+            #   This does not traditionally work with our system of backpropagation because we need to preserve every node
+            #   exactly as it was. 
+            #   When we make a GAN, we do not want to actually delete the gradient of the parameter when we alter it. 
+            parameter -= (self.lr / (np.sqrt(vhat) + self.eps) * mhat)
 
 
