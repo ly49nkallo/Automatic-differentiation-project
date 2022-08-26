@@ -44,12 +44,14 @@ class Generator(Module):
         return x
 
 # https://github.com/aladdinpersson/Machine-Learning-Collection/blob/master/ML/Pytorch/GANs/1.%20SimpleGAN/fc_gan.py
+# STOLEN! in the caribbean!
+
 ########### HYPERPARAMS ###########
 lr = 3e-4
 z_dim = 64
 image_dim = 28 * 28 * 1  # 784
 batch_size = 32
-num_epochs = 15
+num_epochs = 2
 
 disc = Discriminator(image_dim)
 gen = Generator(z_dim, image_dim)
@@ -63,30 +65,28 @@ step = 0
 for epoch in range(num_epochs):
     for batch_idx, (real, _) in (enumerate(tqdm(data_loader, desc=f"Epoch: {epoch + 1}", 
                                                     ascii=True, colour='green'))):
-        disc.zero_grad()
-        gen.zero_grad()
         real = real.reshape(-1, 784)
         real = Tensor(real, requires_grad=True)
-        ### Train Discriminator: max log(D(x)) + log(1 - D(G(z)))  
+
+        ### Train Discriminator: max log(D(x)) + log(1 - D(G(z))) ###
         noise = Tensor(np.random.randn(batch_size, z_dim), requires_grad = True)
         fake = gen(noise)
-        
         disc_real = disc(real)
         lossD_real = criterion(disc_real, Tensor(np.ones(disc_real.shape, dtype=int)))
         disc_fake = disc(fake).view(-1)
         lossD_fake = criterion(disc_fake, Tensor(np.zeros(disc_fake.shape, dtype=int)))
         lossD = (lossD_real + lossD_fake) / 2
-        lossD.backward()
-        opt_disc.step()
+        lossD.backward() #retain graph = false
+        opt_disc.step() # alters parameters of the discriminator
         
-        ### Train Generator: min log(1 - D(G(z))) <-> max log(D(G(z))
+        ### Train Generator: min log(1 - D(G(z))) <-> max log(D(G(z)) ###
         # where the second option of maximizing doesn't suffer from
         # saturating gradients
-
+        disc.zero_grad()
         output = disc(fake).view(-1)
         lossG = criterion(output, Tensor(np.ones_like(output.data)))
         gen.zero_grad()
-        lossG.backward()
+        lossG.backward() # error is thrown here because the gradient of lossG depends on the output of disc, which requires math with the disc parameters
         opt_gen.step()
         
         if batch_idx == 0:

@@ -10,8 +10,11 @@ class Parameter(Tensor):
         # defined for Momentum
         self.v:np.ndarray = np.zeros(self.shape)
         self.m:np.ndarray = np.zeros(self.shape)
-        
 
     def zero_grad(self) -> None:
         super().zero_grad()
+
+    def update_param(self, other:Tensor):
+
+        raise NotImplementedError
         
