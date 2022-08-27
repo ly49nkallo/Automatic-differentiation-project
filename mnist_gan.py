@@ -82,9 +82,9 @@ for epoch in range(num_epochs):
         ### Train Generator: min log(1 - D(G(z))) <-> max log(D(G(z)) ###
         # where the second option of maximizing doesn't suffer from
         # saturating gradients
-        disc.zero_grad()
         output = disc(fake).view(-1)
         lossG = criterion(output, Tensor(np.ones_like(output.data)))
+        disc.zero_grad()
         gen.zero_grad()
         lossG.backward() # error is thrown here because the gradient of lossG depends on the output of disc, which requires math with the disc parameters
         opt_gen.step()

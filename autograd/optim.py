@@ -14,7 +14,12 @@ class Optimizer_base:
             raise TypeError("params argument given to the optimizer should be "
                             "an iterable of Tensors or dicts, but got " +
                             type(parameters))
-
+        if hasattr(parameters, '__call__'):
+            raise TypeError("params argument given to the optimizer should be "
+                            "an iterable of Tensors or dicts, but got " +
+                            type(parameters) + "\nDid you acidentally pass in the\
+                            autograd.module.parameters function object instead of\
+                            calling it?")
         self.parameters = list(parameters)
         if len(self.parameters) == 0:
             raise ValueError("optimizer recieved no parameters")

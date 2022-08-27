@@ -10,7 +10,6 @@ def _forward_unimplmented(self, *input: Any) -> None:
          to implement a forward method (it is required!)'''
     raise NotImplementedError('forward was not implemented >:(')
 
-
 class Module:
     def __init__(self) -> None:
         self.training = True
@@ -265,6 +264,10 @@ class Module:
                 parameter.grad = None
             else:
                 parameter.zero_grad()
+        # recursivly navigtate and zero out sub module gradient parameters as wwell
+        for module_name, module in self.named_modules():
+            if module_name == '': continue # skip the self-reference
+            module.zero_grad(set_to_none=set_to_none)
 
 class Linear(Module):
     def __init__(self, in_features, out_features) -> None:
@@ -289,4 +292,3 @@ class Dropout(Module):
     
     def forward(self, x):
         ...
-

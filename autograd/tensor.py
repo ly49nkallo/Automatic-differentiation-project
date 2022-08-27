@@ -34,7 +34,7 @@ class Tensor:
 
         if self.requires_grad:
             self.zero_grad()
-
+    '''Properties'''
     @property
     def data(self) -> np.ndarray:
         return self._data
@@ -51,6 +51,17 @@ class Tensor:
     def ndim(self):
         return self.data.ndim
 
+    @property
+    def min(self):
+        return self.data.min()
+    @property
+    def max(self):
+        return self.data.max()
+
+    @property
+    def dtype(self):
+        return self.data.dtype
+    
     @data.setter
     def data(self, value):
         self._data = value
@@ -59,7 +70,10 @@ class Tensor:
         self.grad = None
 
     def __repr__(self):
-        return f"Tensor({self.data}, self.grad={self.grad}, shape={self.shape}, requires_grad={self.requires_grad})"
+        if self.data.size > 20:
+            return f"Tensor((min,max)={self.min, self.max}, dtype={self.dtype}, self.grad={self.grad}, shape={self.shape}, requires_grad={self.requires_grad})"
+        else:
+            return f"Tensor({self.data}, self.grad={self.grad}, shape={self.shape}, requires_grad={self.requires_grad})"
 
     def __len__(self):
         return self.size
@@ -121,7 +135,7 @@ class Tensor:
         self.grad = Tensor(np.zeros(self.data.shape))
         assert self.grad is not None
 
-    def backward(self, grad:'Tensor' = None):
+    def backward(self, grad:'Tensor' = None) -> None:
         assert self.requires_grad, "called backwards on tensor that doesn't require gradient"
         if grad is None:
             if self.shape == ():
@@ -134,10 +148,11 @@ class Tensor:
         for parent in self.parent_nodes:
             backward_grad = parent.grad_fn(grad.data)
             assert backward_grad is not None
-            assert parent.tensor.grad is not None, parent.tensor.shape
+            if parent.tensor.grad is None:
+                raise RuntimeError("Parent tensor.grad is None", repr(parent.tensor))
             parent.tensor.backward(Tensor(backward_grad))
 
-    '''Tensor operations'''
+    '''[+++++O+++++] <{%}> - <~] Tensor operations [~> - <{%}> [+++++O+++++]'''
 
     def sum(self, axis:Optional[int] = None) -> 'Tensor':
         return _tensor_sum(self, axis=axis)
