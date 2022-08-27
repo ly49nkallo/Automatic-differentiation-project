@@ -31,6 +31,10 @@ class Module:
 
     __call__ : Callable[..., Any] = _call_impl
 
+    def __repr__(self) -> str:
+        if len(self.named_modules) == 1: return f"Module(training={self.training}, \
+                                                    modules={repr(list(self.named_modules))}, \
+                                                    parameters={repr(list(self.named_parameters))})"
     def register_parameter(self, name, param:Optional[Parameter]) -> None:
         if '_parameters' not in self.__dict__:
             raise AttributeError(
