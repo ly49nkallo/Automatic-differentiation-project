@@ -32,9 +32,11 @@ class Module:
     __call__ : Callable[..., Any] = _call_impl
 
     def __repr__(self) -> str:
-        if len(self.named_modules) == 1: return f"Module(training={self.training}, \
-                                                    modules={repr(list(self.named_modules))}, \
-                                                    parameters={repr(list(self.named_parameters))})"
+        if len(list(self.named_modules())) != 1: return f"Module(training={self.training}, \
+                                                    modules={repr([x for x, n in self.named_modules() if x != ''])}, \
+                                                    parameters={repr([x for x, n in self.named_parameters() if x != ''])})"
+        else: return f"Module(training={self.training}, \
+                                                    parameters={repr([x for x, n in self.named_parameters() if x != ''])})"
     def register_parameter(self, name, param:Optional[Parameter]) -> None:
         if '_parameters' not in self.__dict__:
             raise AttributeError(
