@@ -27,9 +27,11 @@ def test_zero_grad():
     optim.step()
     output = mod(Tensor([1, 1, 1, 1, 1], requires_grad=True))
     output = (output / 2).sum()
+    print('end training step one')
     mod.zero_grad()
     output.backward()
     optim.step()
+    mod.zero_grad()
     a = '''All Parameters'''
     print(a)
     print('#' * 20)

@@ -265,10 +265,11 @@ class Module:
 
     def zero_grad(self, set_to_none:bool = False) -> None:
         '''Zero out every parameter's gradient that is stored in this optimizer'''
-        for parameter in self.parameters():
+        for name, parameter in self.named_parameters():
             if set_to_none:
                 parameter.grad = None
             else:
+                # print(f'set parameter \"{name}  .grad.zero_grad()')
                 parameter.zero_grad()
         # recursivly navigtate and zero out sub module gradient parameters as wwell
         for module_name, module in self.named_modules():
