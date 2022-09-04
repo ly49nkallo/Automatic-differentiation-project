@@ -2,6 +2,7 @@ from autograd.module import Module, Linear
 from autograd.parameter import Parameter
 from autograd.optim import SGD
 from autograd.tensor import Tensor
+import unittest
 
 class MyModule(Module):
     def __init__(self):
@@ -14,37 +15,38 @@ class MyModule(Module):
         out = x @ self.param_1 + self.param_3
         return out
 
-def test_zero_grad():
-    mod = MyModule()
-    for parameter in mod.parameters():
-        assert parameter.grad.data.max() == 0
-    optim = SGD(mod.parameters())
-    output = mod(Tensor([1, 1, 1, 1, 1], requires_grad=True))
-    output = (output / 2).sum()
-    # print(output)
-    mod.zero_grad()
-    output.backward()
-    optim.step()
-    output = mod(Tensor([1, 1, 1, 1, 1], requires_grad=True))
-    output = (output / 2).sum()
-    print('end training step one')
-    mod.zero_grad()
-    output.backward()
-    optim.step()
-    mod.zero_grad()
-    a = '''All Parameters'''
-    print(a)
-    print('#' * 20)
-    for name, parameter in mod.named_parameters():
+class TestZeroGrad(unittest.TestCase):
+    def test_zero_grad(self):
+        mod = MyModule()
+        for parameter in mod.parameters():
+            assert parameter.grad.data.max() == 0
+        optim = SGD(mod.parameters())
+        output = mod(Tensor([1, 1, 1, 1, 1], requires_grad=True))
+        output = (output / 2).sum()
+        # print(output)
+        mod.zero_grad()
+        output.backward()
+        optim.step()
+        output = mod(Tensor([1, 1, 1, 1, 1], requires_grad=True))
+        output = (output / 2).sum()
+        print('end training step one')
+        mod.zero_grad()
+        output.backward()
+        optim.step()
+        mod.zero_grad()
+        a = '''All Parameters'''
+        print(a)
+        print('#' * 20)
+        for name, parameter in mod.named_parameters():
+            print()
+            print(name)
+            print(parameter)
         print()
-        print(name)
-        print(parameter)
-    print()
-    print('#' * 20)
-    for name, parameter in mod.named_parameters():
-        try: 
-            assert parameter.grad.data.max() < 1e-2, (parameter.shape, parameter.dtype)
-        except AttributeError:
-            print(parameter.shape, parameter.dtype, 'max', parameter.max, 'min', parameter.min, 'ave', round(parameter.data.sum() / parameter.size, 5))
-            raise NameError(f'the parameter {name} is (probably) None')
+        print('#' * 20)
+        for name, parameter in mod.named_parameters():
+            try: 
+                assert parameter.grad.data.max() < 1e-2, (parameter.shape, parameter.dtype)
+            except AttributeError:
+                print(parameter.shape, parameter.dtype, 'max', parameter.max, 'min', parameter.min, 'ave', round(parameter.data.sum() / parameter.size, 5))
+                raise NameError(f'the parameter {name} is (probably) None')
     

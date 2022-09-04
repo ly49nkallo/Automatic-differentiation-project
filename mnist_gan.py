@@ -15,7 +15,7 @@ class Discriminator(Module):
     def __init__(self, in_features):
         super().__init__()
         self.fc1 = Linear(in_features, 128)
-        self.act1 = Sigmoid()
+        self.act1 = ReLU()
         self.fc2 = Linear(128, 1)
         self.sig = Sigmoid()
         
@@ -69,12 +69,15 @@ for epoch in range(num_epochs):
         real = Tensor(real, requires_grad=True)
 
         ### Train Discriminator: max log(D(x)) + log(1 - D(G(z))) ###
+        disc.zero_grad()
+        gen.zero_grad()
+        # assert max([p.grad.max for n, p in disc.named_parameters()]) < 0.1, max([p.grad.max for n, p in disc.named_parameters()])
         noise = Tensor(np.random.randn(batch_size, z_dim), requires_grad = True)
         fake = gen(noise)
         disc_real = disc(real)
-        lossD_real = criterion(disc_real, Tensor(np.ones(disc_real.shape, dtype=int)))
+        lossD_real = criterion(disc_real, Tensor(np.ones(disc_real.shape)))
         disc_fake = disc(fake).view(-1)
-        lossD_fake = criterion(disc_fake, Tensor(np.zeros(disc_fake.shape, dtype=int)))
+        lossD_fake = criterion(disc_fake, Tensor(np.zeros(disc_fake.shape)))
         lossD = (lossD_real + lossD_fake) / 2
         lossD.backward() #retain graph = false
         opt_disc.step() # alters parameters of the discriminator
@@ -86,7 +89,8 @@ for epoch in range(num_epochs):
         lossG = criterion(output, Tensor(np.ones_like(output.data)))
         disc.zero_grad()
         gen.zero_grad()
-        lossG.backward() # error is thrown here because the gradient of lossG depends on the output of disc, which requires math with the disc parameters
+        lossG.backward() # error is thrown here because the gradient of lossG depends on the output of disc, \
+        #which requires math with the disc parameters
         opt_gen.step()
         
         if batch_idx == 0:

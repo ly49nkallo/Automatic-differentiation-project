@@ -7,4 +7,3 @@ from autograd.parameter import Parameter
 from autograd.tensor import Tensor
 from autograd.optim import SGD, Momentum, Adam
 from autograd.criterion import CrossEntropyLoss
-

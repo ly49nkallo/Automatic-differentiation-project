@@ -1,4 +1,4 @@
-from warnings import WarningMessage, warn
+from warnings import warn
 import numpy as np
 from typing import List, NamedTuple, Callable, Optional, Union
 
@@ -70,7 +70,7 @@ class Tensor:
         self.grad = None
 
     def __repr__(self):
-        if self.data.size > 20:
+        if self.data.size > 25:
             return f"Tensor((min,max)={self.min, self.max}, dtype={self.dtype}, self.grad={self.grad}, shape={self.shape}, requires_grad={self.requires_grad})"
         else:
             return f"Tensor({self.data}, self.grad={self.grad}, shape={self.shape}, requires_grad={self.requires_grad})"
@@ -402,8 +402,9 @@ def _slice(t: Tensor, idxs) -> Tensor:
 def _logsig(t:Tensor) -> Tensor:
     try:
         data = 1 / (1 + np.exp(-t.data))
-    except RuntimeWarning:
+    except RuntimeWarning as e:
         print(t.data)
+        raise e
     requires_grad = t.requires_grad
     if requires_grad:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
@@ -428,12 +429,13 @@ def _tanh(t:Tensor) -> Tensor:
     return Tensor(data, requires_grad, parent_nodes)
 
 def _relu(t:Tensor) -> Tensor:
-    data = np.maximum(t.data, np.zeros_like(t.data))
+    data = np.maximum(t.data, 0)
     requires_grad = t.requires_grad
     if requires_grad:
         def grad_fn(grad:np.ndarray) -> np.ndarray:
             # the derivative of relu is 0 if x<0 and 1 if x>0
-            return grad * (t.data > 0)
+            espilon = 1e-8
+            return grad * (data > espilon)
         parent_nodes = [Node(t, grad_fn)]
     else:
         parent_nodes = []

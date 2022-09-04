@@ -3,7 +3,7 @@ from typing import Optional, Dict, Union, Set, Iterator, Callable, Any, Tuple
 from autograd.tensor import Tensor
 from autograd.parameter import Parameter
 from collections import OrderedDict
-import autograd.functional as F
+# import autograd.functional as F
 # @TODO Module.zero_grad DOES NOT WORK AT ALL
 def _forward_unimplmented(self, *input: Any) -> None:
     r'''This gets called as a placeholder if the programmer forgets
