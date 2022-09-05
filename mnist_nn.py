@@ -4,7 +4,7 @@ from tqdm import tqdm
 import time
 
 from autograd.dataloader import Dataloader
-from autograd.tensor import Tensor
+from autograd.tensor import Tensor, Array_like
 from autograd.optim import SGD, Momentum, Adam
 from autograd.module import Module, Linear
 from autograd.activation import *
@@ -28,7 +28,8 @@ class Mlp(Module):
         x = self.linear3(x)
         return x
 
-def moving_average(a, n=3) :
+def moving_average(a:Array_like, n=3) :
+    if not isinstance(a, Array_like): raise TypeError("Argument must be an Array_like")
     if not isinstance(a, np.ndarray): a = np.array(a)
     ret = np.cumsum(a, dtype=float)
     ret[n:] = ret[n:] - ret[:-n]
