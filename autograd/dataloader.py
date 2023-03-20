@@ -44,6 +44,13 @@ class Dataloader:
             self.data = np.array(list(map(lambda img: np.array(img) / 255, self.data))).reshape(-1, 28, 28)
             self.label = np.array(self.label).reshape(-1)
         
+        elif self.dataset == 'NOT':
+            if train:
+                self.data = (np.random.rand(1000, 100) > 0.5).astype(np.int32)
+                self.label = -self.data.copy() + 1
+            else:
+                self.data = (np.random.rand(100, 100) > 0.5).astype(np.int32)
+                self.label = -self.data.copy() + 1
         
     def __iter__(self):
         self.index = 0

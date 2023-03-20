@@ -9,9 +9,10 @@ from autograd.optim import SGD, Momentum, Adam
 from autograd.module import Module, Linear
 from autograd.activation import *
 from autograd.functional import *
+from autograd.utils import *
 
 
-class Mlp(Module):
+class MNIST_MLP(Module):
     def __init__(self, in_features, out_features):
         super().__init__()
         self.linear = Linear(in_features, 128)
@@ -19,6 +20,7 @@ class Mlp(Module):
         self.linear3 = Linear(32, out_features)
         self.act = Sigmoid()
         self.act2 = Sigmoid()
+        self.act3 = Sigmoid()
 
     def forward(self, x):
         x = self.linear(x)
@@ -26,15 +28,8 @@ class Mlp(Module):
         x = self.linear2(x)
         x = self.act2(x)
         x = self.linear3(x)
+        x = self.act3(x)
         return x
-
-def moving_average(a:Array_like, n=3) :
-    if not isinstance(a, Array_like): raise TypeError("Argument must be an Array_like")
-    if not isinstance(a, np.ndarray): a = np.array(a)
-    ret = np.cumsum(a, dtype=float)
-    ret[n:] = ret[n:] - ret[:-n]
-    return ret[n - 1:] / n
-
 
 def main():
     batch_size = 16
@@ -61,7 +56,7 @@ def main():
     history = []
     loader = Dataloader('mnist', batch_size, shuffle=False, dummy=False)
     test_loader = Dataloader('mnist', 1000, train=False, shuffle=True)
-    model = Mlp(28*28, 10)
+    model = MNIST_MLP(28*28, 10)
     optimizer = Adam(model.parameters(), lr = 0.01)
     
     test()
@@ -77,16 +72,14 @@ def main():
             loss = nll(output, target)
             pred = np.argmax(output.data.copy(), axis=1)
             correct = sum([1 if p == t.data else 0 for p, t in zip(pred, target)])
-            history.append(correct)
+            history.append(correct / batch_size) # normalize for batch size to get % correct
             if batch_idx % 100 == 0:
                 pbar.set_postfix_str('Accuracy {:.1f}%'.format(sum(history[-look_back:])/look_back/batch_size*100))
             loss.backward()
             optimizer.step()
-            
-
         test()
     #print(history)
-   # plt.plot(history)
+    #plt.plot(history)
     plt.plot(moving_average(history[10:], n=10))
     plt.plot(moving_average(history[10:], n=100))
     plt.title('Accuracy')

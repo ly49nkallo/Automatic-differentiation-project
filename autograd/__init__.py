@@ -7,4 +7,5 @@ from autograd.parameter import Parameter
 from autograd.tensor import Tensor
 from autograd.optim import SGD, Momentum, Adam, Optimizer_base
 from autograd.criterion import CrossEntropyLoss, MSE_loss
+from autograd.dataloader import Dataloader
 
