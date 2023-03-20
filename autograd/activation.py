@@ -30,11 +30,3 @@ class Softmax(Module):
     
     def forward(self, x):
         return x.softmax()
-    
-class Experimental(Module):
-    r'''Experimental Activation Function'''
-    def __init__(self) -> None:
-        super().__init__()
-    
-    def forward(self, x):
-        return 
