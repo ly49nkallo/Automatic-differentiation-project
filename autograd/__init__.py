@@ -5,5 +5,6 @@ from autograd.module import Module,  Linear
 from autograd.activation import ReLU, Tanh, Sigmoid, Softmax
 from autograd.parameter import Parameter
 from autograd.tensor import Tensor
-from autograd.optim import SGD, Momentum, Adam
-from autograd.criterion import CrossEntropyLoss
+from autograd.optim import SGD, Momentum, Adam, Optimizer_base
+from autograd.criterion import CrossEntropyLoss, MSE_loss
+
