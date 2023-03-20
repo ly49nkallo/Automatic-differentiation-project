@@ -84,6 +84,8 @@ def main():
     plt.plot(moving_average(history[10:], n=100))
     plt.title('Accuracy')
     plt.show()
+    # Serialize model and store
+    serialize_model(model)
 
 if __name__ == '__main__':
     main()
