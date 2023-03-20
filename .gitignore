@@ -7,4 +7,5 @@ env/**
 .vs/**
 .gitignore
 .vscode/**
+saved_models/**
 important_links.txt
