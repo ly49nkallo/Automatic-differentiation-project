@@ -8,7 +8,7 @@ import pickle
 import numpy as np
 
 def moving_average(a:Array_like, n=3) :
-    if not isinstance(a, Array_like): raise TypeError("Argument must be an Array_like")
+    #if not isinstance(a, Array_like): raise TypeError("Argument must be an Array_like")
     if not isinstance(a, np.ndarray): a = np.array(a)
     ret = np.cumsum(a, dtype=float)
     ret[n:] = ret[n:] - ret[:-n]
