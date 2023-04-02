@@ -7,7 +7,7 @@ import numpy as np
 import pickle
 import os
 from pathlib import Path
-from mnist_nn import MNIST_MLP # get definition
+from mnist_nn import MNIST_MLP, Custom_MNIST_MLP # get definition(s)
 '''INVESTIGATE CRITICALITY IN MULTI-LAYER PERCEPTRONS'''
 
 class XOR(a.Module): 
@@ -26,13 +26,13 @@ class XOR(a.Module):
     
 def main():
     # visualize each activation at each layer'
-    name = 'MNIST_MLP'
+    name = 'Custom_MNIST_MLP'
     with open(Path(f"{os.getcwd()}/saved_models/{name}.pkl"), 'rb') as inp:
         model =  pickle.load(inp)
     params = list(model.parameters())
     params = [p.data for p in params] # get just the data
-    init_state = np.zeros(shape=(1,28*28))
-    history = [init_state.copy()]
+    init_state = np.zeros(shape=(1,28*28), dtype=np.float32)
+    history = [init_state]
     state = init_state
     for p in params:
         if p.ndim == 1:
@@ -43,9 +43,13 @@ def main():
             state = state @ p
         #record state
         
-    fig, ax = plt.subplots(1, len(history), sharey=True)
+    fig, ax = plt.subplots(1, len(history))
     for i, a in enumerate(ax.flatten()):
-        a.imshow(history[i])
+        a.axis('off')
+        if i == len(history) - 1:
+            a.imshow(history[i])
+            break
+        a.imshow(history[i].reshape(int(np.sqrt(history[i].size)),int(np.sqrt(history[i].size))))
     plt.show()
     print(state)
 

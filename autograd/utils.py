@@ -16,7 +16,6 @@ def moving_average(a:Array_like, n=3) :
 
 def serialize_model(model: Module, file_path:Optional[Union[str, Path]] = None) -> tuple:
 
-    #@TODO WORKING DIRECTORY !!!!
     '''Turn model into serializable data and store in filesystem
         Args:
             model: Model instance to be stored
