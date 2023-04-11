@@ -1,5 +1,8 @@
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 import autograd as a
 import autograd.utils as u
+import autograd.functional as f
 import numpy as np
 import matplotlib.pyplot as plt
 '''INVESTIGATE CRITICALITY IN MULTI-LAYER PERCEPTRONS'''

@@ -8,7 +8,7 @@ import pickle
 import numpy as np
 
 def moving_average(a:Array_like, n=3) :
-    if not isinstance(a, Array_like): raise TypeError("Argument must be an Array_like")
+    #if not isinstance(a, Array_like): raise TypeError("Argument must be an Array_like")
     if not isinstance(a, np.ndarray): a = np.array(a)
     ret = np.cumsum(a, dtype=float)
     ret[n:] = ret[n:] - ret[:-n]
@@ -16,7 +16,6 @@ def moving_average(a:Array_like, n=3) :
 
 def serialize_model(model: Module, file_path:Optional[Union[str, Path]] = None) -> tuple:
 
-    #@TODO WORKING DIRECTORY !!!!
     '''Turn model into serializable data and store in filesystem
         Args:
             model: Model instance to be stored
