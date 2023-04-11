@@ -46,7 +46,14 @@ def load_model(file_path:Optional[Union[str, Path]] = None, name:Optional[str] =
             return pickle.load(inp)
     elif name is not None:
         with open(Path(f"{os.getcwd()}/saved_models/{name}.pkl"), 'rb') as inp:
-            return pickle.load(inp)
+            return CustomUnpickler(inp).load()
     
+class CustomUnpickler(pickle.Unpickler):
+    def find_class(self, module, name):
+        if name == 'MNIST_MLP':
+            from mnist_nn import MNIST_MLP
+            return MNIST_MLP
+        return super().find_class(module, name)
     
+
 
