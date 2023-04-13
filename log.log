@@ -11,9 +11,8 @@ Approx 1500 it/s or ~6 sec / 10000 iterations
 iterations 40000
 mean 4.250133333333333
 median 4.0
-std 2.0883147070198866
+std 2.0987534329268462
 ratio of activation starting 0.0625
-average state size
 ratio of activation average 0.06071619047619048
 
 2023-04-12 23:27:48.708718
@@ -42,3 +41,29 @@ median 4.0
 std 2.088877481774335
 ratio of activation starting 0.0625
 ratio of activation average 0.06067730952380952
+
+
+>>> np.mean(means)
+4.251894583333334
+>>> np.max(means) - np.mean(means) 
+0.0039720833333332095
+>>> np.min(means) - np.mean(means)
+-0.004482916666667336
+>>> np.mean(stds)
+2.093709116389662
+>>> np.max(stds) - np.mean(stds)
+0.00504431653718429
+>>> np.min(stds) - np.mean(stds)
+-0.0052569984590427055
+>>> np.mean(roaa)
+0.06074135119047619
+>>> np.max(roaa) - np.mean(roaa)
+5.6744047619051996e-05
+>>> np.max(roaa)
+0.06079809523809524
+>>> np.max(roaa) - np.mean(roaa)
+5.6744047619051996e-05
+>>> np.min(roaa) - np.mean(roaa)
+-6.404166666666711e-05
+>>> np.mean(roaa) / 0.0625
+0.971861619047619
