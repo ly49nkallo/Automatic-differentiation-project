@@ -1,0 +1,44 @@
+Approx 1500 it/s or ~6 sec / 10000 iterations
+100000it [01:02, 1597.02it/s]
+10000it [00:06, 1536.47it/s]
+20000it [00:12, 1588.69it/s]
+40000it [00:25, 1576.49it/s]
+
+==========================
+
+2023-04-12 23:25:11.493399
+###IMPORTANT STATISTICS###
+iterations 40000
+mean 4.250133333333333
+median 4.0
+std 2.0883147070198866
+ratio of activation starting 0.0625
+average state size
+ratio of activation average 0.06071619047619048
+
+2023-04-12 23:27:48.708718
+###IMPORTANT STATISTICS###
+iterations 20000
+mean 4.255866666666667
+median 4.0
+std 2.0884521179306192
+ratio of activation starting 0.0625
+ratio of activation average 0.06079809523809524
+
+2023-04-12 23:29:22.400831
+###IMPORTANT STATISTICS###
+iterations 10000
+mean 4.254166666666666
+median 4.0
+std 2.0987534329268462
+ratio of activation starting 0.0625
+ratio of activation average 0.06077380952380952
+
+2023-04-12 23:31:10.140613
+###IMPORTANT STATISTICS###
+iterations 100000
+mean 4.247411666666666
+median 4.0
+std 2.088877481774335
+ratio of activation starting 0.0625
+ratio of activation average 0.06067730952380952

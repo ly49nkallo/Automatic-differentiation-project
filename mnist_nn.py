@@ -58,6 +58,42 @@ class Custom_MNIST_MLP(Module):
         x = self.act5(x)
         return x
     
+class Custom_MNIST_MLP_2(Module):
+    '''For use in research (uses perfect square features)'''
+    def __init__(self, in_features, out_features):
+        super().__init__()
+        self.linear1 = Linear(in_features, 100)
+        self.linear2 = Linear(100, 64)
+        self.linear3 = Linear(64, 64)
+        self.linear4 = Linear(64, 64)
+        self.linear5 = Linear(64, 64)
+        self.linear6 = Linear(64, 64)
+        self.linear7 = Linear(64, out_features)
+        self.act1 = Sigmoid()
+        self.act2 = Sigmoid()
+        self.act3 = Sigmoid()
+        self.act4 = Sigmoid()
+        self.act5 = Sigmoid()
+        self.act6 = Sigmoid()
+        self.act7 = Sigmoid()
+
+    def forward(self, x):
+        x = self.linear1(x)
+        x = self.act1(x)
+        x = self.linear2(x)
+        x = self.act2(x)
+        x = self.linear3(x)
+        x = self.act3(x)
+        x = self.linear4(x)
+        x = self.act4(x)
+        x = self.linear5(x)
+        x = self.act5(x)
+        x = self.linear6(x)
+        x = self.act6(x)
+        x = self.linear7(x)
+        x = self.act7(x)
+        return x
+    
 def main():
     batch_size = 16
     epochs = 1 
@@ -83,7 +119,7 @@ def main():
     history = []
     loader = Dataloader('mnist', batch_size, shuffle=False, dummy=False)
     test_loader = Dataloader('mnist', 1000, train=False, shuffle=True)
-    model = Custom_MNIST_MLP(28*28, 10)
+    model = Custom_MNIST_MLP_2(28*28, 10)
     optimizer = Adam(model.parameters(), lr = 0.01)
     
     test()
