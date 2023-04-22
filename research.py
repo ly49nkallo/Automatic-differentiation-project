@@ -103,13 +103,14 @@ def main():
         return history
     init_states = []
     size_of_flash = 7
-    iter_ = 100000
+    iter_ = 1000
     for i in tqdm.tqdm(range(iter_)):
         init_state = np.zeros(shape=(1,28,28), dtype=np.float32)
         x, y = np.random.randint(0,28-size_of_flash), np.random.randint(0,28-size_of_flash)
         init_state[0,x:x+size_of_flash,y:y+size_of_flash] += 1
         init_state = init_state.reshape(1,-1)
         init_states.append(init_state)
+    #Execute
     fire = display2(init_states, simulate)
     # get counts
     counts = []
@@ -132,6 +133,11 @@ def main():
           )
     plt.figure()
     plt.hist(counts)
+    plt.figure()
+    counts = np.array(counts).reshape(len(fire), len(fire[0]) - 2).astype(np.float32)
+    counts[:,0] /= 100
+    counts[:,1:] /= 64
+    plt.plot(np.mean(counts, axis=0))
     plt.show()
 
 def config():
