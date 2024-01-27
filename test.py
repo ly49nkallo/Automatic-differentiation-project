@@ -10,7 +10,7 @@ from autograd.activation import Sigmoid, Tanh, Softmax
 from autograd.functional import *
 
 class testClass() :
-    def __init__(self, data:list) :
+    def __init__(self, data:list):
         self.data = data
 
     def inc(self) :

@@ -7,7 +7,8 @@ def main() -> int:
         try:
             i = input()
             if i.upper() in kill_seq: raise KeyboardInterrupt
-            if i.upper() == 'QUACK': print('stop copying me', end=' ')
+            if i.upper() in ['QUACK' + ' QUACK' * i for i in range(5)]: 
+                print('stop copying me', end=' ')
             print('*quack* ' * random.randint(1,3))
         except KeyboardInterrupt:
             print('*Quack*! (Bye!)')
