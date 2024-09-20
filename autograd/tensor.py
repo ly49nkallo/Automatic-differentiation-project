@@ -318,7 +318,8 @@ def _matmul(t1: Tensor, t2: Tensor) -> Tensor:
         grad2 = t1.T @ grad3
     """
     #if t1.data.ndim == 1:
-
+    # print('matmul on', t1.shape, t2.shape)
+    assert t1.ndim == 2 and t2.ndim == 2
     data = t1.data @ t2.data
     requires_grad = t1.requires_grad or t2.requires_grad
 

@@ -298,4 +298,5 @@ class Dropout(Module):
         self.discard_rate = discard_rate
     
     def forward(self, x):
+        raise NotImplementedError()
         ...

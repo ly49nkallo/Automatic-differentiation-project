@@ -203,3 +203,7 @@ def dropout(t1:Tensor, rate:float) -> Tensor:
     r''' Utility function that randomly sets values in a tensor to zero '''
     data = np.random.binomial()
     print(data)
+    
+def L1Loss(input:Tensor, labels:Tensor) -> Tensor:
+    assert input.shape == labels.shape
+    return (input - labels).abs().sum()
